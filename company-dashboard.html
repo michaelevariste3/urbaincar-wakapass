@@ -8,13 +8,11 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0B1F3A; color: white; padding: 20px; }
         
-        /* Header */
         .header { background: linear-gradient(135deg, #FF7A00, #FF9F3D); padding: 20px; border-radius: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
         .company-info h1 { color: #0B1F3A; margin-bottom: 5px; }
         .company-info p { color: #0B1F3A; opacity: 0.9; }
         .logout-btn { background: #0B1F3A; color: #FF7A00; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
         
-        /* Statistiques */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .stat-card { background: #1E2F4B; padding: 20px; border-radius: 12px; text-align: center; transition: transform 0.2s; }
         .stat-card:hover { transform: translateY(-5px); }
@@ -22,20 +20,17 @@
         .stat-number { font-size: 1.8rem; font-weight: bold; color: #FF7A00; }
         .stat-label { font-size: 0.85rem; opacity: 0.8; margin-top: 5px; }
         
-        /* Sections */
         .section { background: #1E2F4B; border-radius: 12px; margin-bottom: 20px; overflow: hidden; }
         .section-header { background: #2A3F5F; padding: 15px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
         .section-header h2 { font-size: 1.2rem; }
         .section-content { padding: 20px; display: none; }
         .section-content.active { display: block; }
         
-        /* Tableaux */
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #2A3F5F; }
         th { background: #FF7A00; color: #0B1F3A; }
         tr:hover { background: #2A3F5F; }
         
-        /* Formulaires */
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; color: #FF7A00; font-weight: bold; }
         input, select, textarea { width: 100%; padding: 10px; background: #2A3F5F; border: none; border-radius: 6px; color: white; }
@@ -44,35 +39,36 @@
         .btn-danger { background: #dc3545; color: white; }
         .btn-success { background: #20C997; color: white; }
         
-        /* Badges */
         .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
         .badge-confirmed { background: #20C997; color: white; }
         .badge-pending { background: #ffc107; color: #0B1F3A; }
         .badge-cancelled { background: #dc3545; color: white; }
+        .badge-transit { background: #17a2b8; color: white; }
+        .badge-arrived { background: #28a745; color: white; }
         
-        /* Modal */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background: #1E2F4B; padding: 30px; border-radius: 12px; max-width: 500px; width: 90%; max-height: 80%; overflow-y: auto; }
         .close { float: right; cursor: pointer; font-size: 24px; }
         
-        /* Alertes */
-        .alert { padding: 12px; border-radius: 8px; margin-bottom: 15px; }
+        .alert { padding: 12px; border-radius: 8px; margin-bottom: 15px; position: fixed; top: 20px; right: 20px; z-index: 1100; animation: slideIn 0.3s ease; }
         .alert-success { background: #20C997; color: white; }
         .alert-error { background: #dc3545; color: white; }
+        .alert-info { background: #17a2b8; color: white; }
         
-        @media (max-width: 768px) {
-            body { padding: 10px; }
-            .stats-grid { grid-template-columns: 1fr; }
-            table { font-size: 12px; }
-            th, td { padding: 8px; }
-        }
+        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+        
+        .loading { text-align: center; padding: 40px; }
+        .spinner { border: 3px solid #2A3F5F; border-top: 3px solid #FF7A00; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        @media (max-width: 768px) { body { padding: 10px; } .stats-grid { grid-template-columns: 1fr; } table { font-size: 12px; } th, td { padding: 8px; } }
     </style>
 </head>
 <body>
     <div class="header">
         <div class="company-info">
             <h1 id="companyName">🏢 Chargement...</h1>
-            <p>Gestion des trajets et réservations</p>
+            <p>Gestion des trajets et réservations en temps réel</p>
         </div>
         <div>
             <span id="currentTime" style="margin-right: 15px;"></span>
@@ -81,7 +77,7 @@
     </div>
     
     <div class="stats-grid" id="statsGrid">
-        <div class="stat-card"><div class="stat-icon">🚌</div><div class="stat-number" id="totalTrips">0</div><div class="stat-label">Trajets aujourd'hui</div></div>
+        <div class="stat-card"><div class="stat-icon">🚌</div><div class="stat-number" id="totalTrips">0</div><div class="stat-label">Trajets</div></div>
         <div class="stat-card"><div class="stat-icon">🎫</div><div class="stat-number" id="totalBookings">0</div><div class="stat-label">Réservations</div></div>
         <div class="stat-card"><div class="stat-icon">💺</div><div class="stat-number" id="totalSeats">0</div><div class="stat-label">Sièges vendus</div></div>
         <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-number" id="totalRevenue">0 FCFA</div><div class="stat-label">Chiffre d'affaires</div></div>
@@ -97,8 +93,8 @@
             <button onclick="showAddTripModal()" style="margin-bottom: 15px;">➕ Ajouter un trajet</button>
             <div style="overflow-x: auto;">
                 <table id="tripsTable">
-                    <thead><tr><th>Départ</th><th>Destination</th><th>Date</th><th>Heure</th><th>Places</th><th>Réservées</th><th>Actions</th></tr></thead>
-                    <tbody id="tripsTableBody"></tbody>
+                    <thead><tr><th>Départ</th><th>Destination</th><th>Date</th><th>Heure</th><th>Places</th><th>Réservées</th><th>Statut</th><th>Actions</th></tr></thead>
+                    <tbody id="tripsTableBody"><tr><td colspan="8" class="loading"><div class="spinner"></div> Chargement...</td></tr></tbody>
                 </table>
             </div>
         </div>
@@ -106,38 +102,31 @@
     
     <div class="section">
         <div class="section-header" onclick="toggleSection('bookingsSection')">
-            <h2>🎫 Réservations en cours</h2>
+            <h2>🎫 Réservations</h2>
             <span>▼</span>
         </div>
         <div id="bookingsSection" class="section-content">
             <div style="overflow-x: auto;">
                 <table id="bookingsTable">
                     <thead><tr><th>Ticket N°</th><th>Client</th><th>Trajet</th><th>Sièges</th><th>Montant</th><th>Statut</th><th>Actions</th></tr></thead>
-                    <tbody id="bookingsTableBody"></tbody>
+                    <tbody id="bookingsTableBody"><tr><td colspan="7" class="loading"><div class="spinner"></div> Chargement...</td></tr></tbody>
                 </table>
             </div>
         </div>
     </div>
     
     <div class="section">
-        <div class="section-header" onclick="toggleSection('reportsSection')">
-            <h2>📊 Rapports et Statistiques</h2>
+        <div class="section-header" onclick="toggleSection('parcelsSection')">
+            <h2>📦 Colis suivis</h2>
             <span>▼</span>
         </div>
-        <div id="reportsSection" class="section-content">
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
-                <div>
-                    <h3>📅 Période</h3>
-                    <input type="date" id="reportStartDate" />
-                    <input type="date" id="reportEndDate" />
-                    <button onclick="generateReport()">Générer rapport</button>
-                </div>
-                <div>
-                    <h3>📈 Top destinations</h3>
-                    <canvas id="destinationsChart" width="300" height="200"></canvas>
-                </div>
+        <div id="parcelsSection" class="section-content">
+            <div style="overflow-x: auto;">
+                <table id="parcelsTable">
+                    <thead><tr><th>Colis N°</th><th>Expéditeur</th><th>Destinataire</th><th>Trajet</th><th>Statut</th><th>Actions</th></tr></thead>
+                    <tbody id="parcelsTableBody"><tr><td colspan="6" class="loading"><div class="spinner"></div> Chargement...</td></tr></tbody>
+                </table>
             </div>
-            <div id="reportResult" style="margin-top: 20px;"></div>
         </div>
     </div>
     
@@ -146,8 +135,8 @@
         <div class="modal-content">
             <span class="close" onclick="closeModal('addTripModal')">&times;</span>
             <h2>➕ Nouveau trajet</h2>
-            <div class="form-group"><label>Départ</label><select id="tripFrom"><option>Abidjan</option><option>Bouaké</option><option>Daloa</option><option>San Pedro</option><option>Korhogo</option></select></div>
-            <div class="form-group"><label>Destination</label><select id="tripTo"><option>Bouaké</option><option>Abidjan</option><option>Daloa</option><option>San Pedro</option><option>Korhogo</option></select></div>
+            <div class="form-group"><label>Départ</label><select id="tripFrom"><option>Abidjan</option><option>Bouaké</option><option>Daloa</option><option>San Pedro</option><option>Korhogo</option><option>Man</option></select></div>
+            <div class="form-group"><label>Destination</label><select id="tripTo"><option>Bouaké</option><option>Abidjan</option><option>Daloa</option><option>San Pedro</option><option>Korhogo</option><option>Man</option></select></div>
             <div class="form-group"><label>Date</label><input type="date" id="tripDate" /></div>
             <div class="form-group"><label>Heure</label><input type="time" id="tripTime" /></div>
             <div class="form-group"><label>Nombre de places</label><input type="number" id="tripSeats" value="45" /></div>
@@ -167,66 +156,193 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, query, where, getDocs, addDoc, updateDoc, doc, deleteDoc, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAbo6b322lE4jxbV6D4ys1MPMHjz1rdAaQ",
+            authDomain: "urbaincar-wakapass.firebaseapp.com",
+            projectId: "urbaincar-wakapass",
+            storageBucket: "urbaincar-wakapass.firebasestorage.app",
+            messagingSenderId: "382162245065",
+            appId: "1:382162245065:web:8f039bc018f2ff9cfec418"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
         let currentCompany = null;
         let currentAction = null;
         let currentItemId = null;
-        let tripsData = [];
-        let bookingsData = [];
-        
+        let currentItemCollection = null;
+        let tripsListener = null;
+        let bookingsListener = null;
+        let parcelsListener = null;
+
         // Initialisation
-        function init() {
-            loadCompanyData();
-            updateTime();
-            setInterval(updateTime, 1000);
-        }
-        
-        function loadCompanyData() {
-            // Simulation données compagnie (à remplacer par API réelle)
+        async function init() {
             const urlParams = new URLSearchParams(window.location.search);
             const companyParam = urlParams.get('company') || 'UTB';
             
             const companies = {
-                'UTB': { name: 'UTB Transport', logo: '🚌', color: '#FF7A00' },
-                'TSR': { name: 'TSR Voyages', logo: '🚍', color: '#17a2b8' },
-                'AFT': { name: 'AFT Express', logo: '🚐', color: '#28a745' },
-                'SAMA': { name: 'SAMA Transport', logo: '🚎', color: '#6f42c1' }
+                'UTB': { name: 'UTB Transport', logo: '🚌' },
+                'TSR': { name: 'TSR Voyages', logo: '🚍' },
+                'AFT': { name: 'AFT Express', logo: '🚐' },
+                'SAMA': { name: 'SAMA Transport', logo: '🚎' },
+                'Ocean CI': { name: 'Ocean CI', logo: '⛴️' }
             };
             
             currentCompany = companies[companyParam] || companies['UTB'];
             document.getElementById('companyName').innerHTML = `${currentCompany.logo} ${currentCompany.name}`;
             document.title = `${currentCompany.name} - Urbain Car`;
             
-            loadMockData();
+            updateTime();
+            setInterval(updateTime, 1000);
+            
+            // Charger les données Firebase
+            loadTrips();
+            loadBookings();
+            loadParcels();
         }
         
-        function loadMockData() {
-            // Données simulées
-            tripsData = [
-                { id: 1, from: 'Abidjan', to: 'Bouaké', date: '2024-01-15', time: '06:00', seats: 45, booked: 12, price: 3500 },
-                { id: 2, from: 'Abidjan', to: 'Bouaké', date: '2024-01-15', time: '10:00', seats: 45, booked: 28, price: 3500 },
-                { id: 3, from: 'Abidjan', to: 'Daloa', date: '2024-01-15', time: '07:30', seats: 45, booked: 35, price: 5000 },
-                { id: 4, from: 'Abidjan', to: 'San Pedro', date: '2024-01-15', time: '14:00', seats: 45, booked: 18, price: 6000 }
-            ];
+        async function loadTrips() {
+            const q = query(collection(db, "trips"), where("company", "==", currentCompany.name));
             
-            bookingsData = [
-                { id: 'TKT-001', client: 'Jean Kouadio', from: 'Abidjan', to: 'Bouaké', seats: 'A1,A2', amount: 7000, status: 'confirmed' },
-                { id: 'TKT-002', client: 'Marie Konan', from: 'Abidjan', to: 'Daloa', seats: 'B3', amount: 5000, status: 'confirmed' },
-                { id: 'TKT-003', client: 'Paul Bamba', from: 'Abidjan', to: 'San Pedro', seats: 'C4,C5', amount: 12000, status: 'pending' }
-            ];
-            
-            updateStats();
-            renderTripsTable();
-            renderBookingsTable();
+            // Écoute en temps réel
+            onSnapshot(q, (snapshot) => {
+                const trips = [];
+                snapshot.forEach(doc => {
+                    trips.push({ id: doc.id, ...doc.data() });
+                });
+                renderTripsTable(trips);
+                updateStats(trips);
+            }, (error) => {
+                console.error("Erreur chargement trajets:", error);
+                showAlert('error', 'Erreur chargement des trajets');
+            });
         }
         
-        function updateStats() {
-            const totalTrips = tripsData.length;
-            const totalBookings = bookingsData.length;
-            const totalSeats = tripsData.reduce((sum, t) => sum + t.booked, 0);
-            const totalRevenue = bookingsData.reduce((sum, b) => sum + (b.status === 'confirmed' ? b.amount : 0), 0);
-            const totalAvailable = tripsData.reduce((sum, t) => sum + t.seats, 0);
+        async function loadBookings() {
+            const q = query(collection(db, "tickets"), where("compagnie", "==", currentCompany.name), orderBy("dateReservation", "desc"));
+            
+            onSnapshot(q, (snapshot) => {
+                const bookings = [];
+                snapshot.forEach(doc => {
+                    bookings.push({ id: doc.id, ...doc.data() });
+                });
+                renderBookingsTable(bookings);
+            });
+        }
+        
+        async function loadParcels() {
+            const q = query(collection(db, "parcels"), where("company", "==", currentCompany.name));
+            
+            onSnapshot(q, (snapshot) => {
+                const parcels = [];
+                snapshot.forEach(doc => {
+                    parcels.push({ id: doc.id, ...doc.data() });
+                });
+                renderParcelsTable(parcels);
+            });
+        }
+        
+        function renderTripsTable(trips) {
+            const tbody = document.getElementById('tripsTableBody');
+            if (trips.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center">📭 Aucun trajet programmé</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = trips.map(trip => {
+                const bookedCount = trip.bookedSeats?.length || 0;
+                const occupancy = trip.seats > 0 ? ((bookedCount / trip.seats) * 100).toFixed(0) : 0;
+                const statusClass = trip.status === 'active' ? 'badge-confirmed' : 'badge-cancelled';
+                const statusText = trip.status === 'active' ? 'Actif' : 'Annulé';
+                
+                return `
+                    <tr>
+                        <td>${trip.from}</td>
+                        <td>${trip.to}</td>
+                        <td>${trip.date}</td>
+                        <td>${trip.time}</td>
+                        <td>${bookedCount}/${trip.seats}</td>
+                        <td>${occupancy}%</td>
+                        <td><span class="badge ${statusClass}">${statusText}</span></td>
+                        <td>
+                            <button onclick="viewTripDetails('${trip.id}')" style="padding: 5px 10px;">📊</button>
+                            <button onclick="cancelTrip('${trip.id}')" class="btn-danger" style="padding: 5px 10px;">❌</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        function renderBookingsTable(bookings) {
+            const tbody = document.getElementById('bookingsTableBody');
+            if (bookings.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center">📭 Aucune réservation</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = bookings.map(booking => `
+                <tr>
+                    <td>${booking.id}</td>
+                    <td>${booking.userEmail || 'N/A'}</td>
+                    <td>${booking.depart} → ${booking.arrivee}</td>
+                    <td>${booking.siege || 'N/A'}</td>
+                    <td>${booking.prix?.toLocaleString() || 0} FCFA</td>
+                    <td><span class="badge badge-${booking.statut === 'Confirmé' ? 'confirmed' : 'pending'}">${booking.statut || 'En attente'}</span></td>
+                    <td>
+                        ${booking.statut !== 'Confirmé' ? `<button onclick="confirmBooking('${booking.id}')" style="padding: 5px 10px;">✅ Valider</button>` : ''}
+                        <button onclick="cancelBooking('${booking.id}')" class="btn-danger" style="padding: 5px 10px;">❌</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function renderParcelsTable(parcels) {
+            const tbody = document.getElementById('parcelsTableBody');
+            if (parcels.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center">📭 Aucun colis</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = parcels.map(parcel => {
+                let statusClass = 'badge-pending';
+                if (parcel.statut === 'En transit') statusClass = 'badge-transit';
+                else if (parcel.statut === 'Arrivé') statusClass = 'badge-arrived';
+                else if (parcel.statut === 'Récupéré') statusClass = 'badge-confirmed';
+                
+                return `
+                    <tr>
+                        <td>${parcel.id}</td>
+                        <td>${parcel.expediteur?.nom || 'N/A'}</td>
+                        <td>${parcel.destinataire?.nom || 'N/A'}</td>
+                        <td>${parcel.depart} → ${parcel.arrivee}</td>
+                        <td><span class="badge ${statusClass}">${parcel.statut || 'En attente'}</span></td>
+                        <td><button onclick="updateParcelStatus('${parcel.id}')" style="padding: 5px 10px;">📦 MàJ</button></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        function updateStats(trips) {
+            const totalTrips = trips.length;
+            let totalBookings = 0;
+            let totalSeats = 0;
+            let totalRevenue = 0;
+            
+            trips.forEach(trip => {
+                const bookedCount = trip.bookedSeats?.length || 0;
+                totalBookings += bookedCount;
+                totalSeats += bookedCount;
+                totalRevenue += bookedCount * (trip.price || 0);
+            });
+            
+            const totalAvailable = trips.reduce((sum, t) => sum + (t.seats || 0), 0);
             const occupancyRate = totalAvailable > 0 ? ((totalSeats / totalAvailable) * 100).toFixed(1) : 0;
             
             document.getElementById('totalTrips').innerText = totalTrips;
@@ -236,161 +352,103 @@
             document.getElementById('occupancyRate').innerText = occupancyRate + '%';
         }
         
-        function renderTripsTable() {
-            const tbody = document.getElementById('tripsTableBody');
-            tbody.innerHTML = tripsData.map(trip => `
-                <tr>
-                    <td>${trip.from}</td>
-                    <td>${trip.to}</td>
-                    <td>${trip.date}</td>
-                    <td>${trip.time}</td>
-                    <td>${trip.booked}/${trip.seats}</td>
-                    <td>${((trip.booked / trip.seats) * 100).toFixed(0)}%</td>
-                    <td>
-                        <button onclick="viewTripDetails(${trip.id})" style="padding: 5px 10px; margin: 2px;">📊</button>
-                        <button onclick="cancelTrip(${trip.id})" class="btn-danger" style="padding: 5px 10px; margin: 2px;">❌</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-        
-        function renderBookingsTable() {
-            const tbody = document.getElementById('bookingsTableBody');
-            tbody.innerHTML = bookingsData.map(booking => `
-                <tr>
-                    <td>${booking.id}</td>
-                    <td>${booking.client}</td>
-                    <td>${booking.from} → ${booking.to}</td>
-                    <td>${booking.seats}</td>
-                    <td>${booking.amount.toLocaleString()} FCFA</td>
-                    <td><span class="badge badge-${booking.status}">${booking.status === 'confirmed' ? 'Confirmé' : 'En attente'}</span></td>
-                    <td>
-                        <button onclick="confirmBooking('${booking.id}')" style="padding: 5px 10px; margin: 2px;">✅ Valider</button>
-                        <button onclick="cancelBooking('${booking.id}')" class="btn-danger" style="padding: 5px 10px; margin: 2px;">❌ Annuler</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-        
-        function showAddTripModal() {
-            document.getElementById('tripDate').valueAsDate = new Date();
-            document.getElementById('addTripModal').style.display = 'flex';
-        }
-        
-        function addTrip() {
-            const newTrip = {
-                id: tripsData.length + 1,
+        async function addTrip() {
+            const tripData = {
+                company: currentCompany.name,
                 from: document.getElementById('tripFrom').value,
                 to: document.getElementById('tripTo').value,
                 date: document.getElementById('tripDate').value,
                 time: document.getElementById('tripTime').value,
                 seats: parseInt(document.getElementById('tripSeats').value),
-                booked: 0,
-                price: parseInt(document.getElementById('tripPrice').value)
+                price: parseInt(document.getElementById('tripPrice').value),
+                bookedSeats: [],
+                status: 'active',
+                createdAt: new Date()
             };
             
-            tripsData.push(newTrip);
-            updateStats();
-            renderTripsTable();
-            closeModal('addTripModal');
-            showAlert('success', '✅ Trajet ajouté avec succès !');
+            try {
+                await addDoc(collection(db, "trips"), tripData);
+                closeModal('addTripModal');
+                showAlert('success', '✅ Trajet ajouté avec succès !');
+            } catch(error) {
+                showAlert('error', 'Erreur: ' + error.message);
+            }
         }
         
-        function viewTripDetails(tripId) {
-            const trip = tripsData.find(t => t.id === tripId);
-            alert(`
-📋 DÉTAILS DU TRAJET
-
-🚍 Départ: ${trip.from}
-📍 Destination: ${trip.to}
-📅 Date: ${trip.date}
-⏰ Heure: ${trip.time}
-💺 Places: ${trip.booked}/${trip.seats}
-💰 CA: ${(trip.booked * trip.price).toLocaleString()} FCFA
-📊 Taux: ${((trip.booked / trip.seats) * 100).toFixed(1)}%
-            `);
-        }
+        window.viewTripDetails = async (tripId) => {
+            const tripDoc = await getDocs(query(collection(db, "trips"), where("__name__", "==", tripId)));
+            tripDoc.forEach(doc => {
+                const trip = doc.data();
+                const bookedCount = trip.bookedSeats?.length || 0;
+                showAlert('info', `
+                    📋 DÉTAILS DU TRAJET\n
+                    🚍 ${trip.from} → ${trip.to}\n
+                    📅 ${trip.date} à ${trip.time}\n
+                    💺 ${bookedCount}/${trip.seats} places\n
+                    💰 ${(bookedCount * trip.price).toLocaleString()} FCFA
+                `);
+            });
+        };
         
-        function cancelTrip(tripId) {
+        window.cancelTrip = (tripId) => {
             currentAction = 'cancelTrip';
             currentItemId = tripId;
+            currentItemCollection = 'trips';
             document.getElementById('confirmMessage').innerText = 'Annuler ce trajet ? Toutes les réservations seront supprimées.';
             document.getElementById('confirmModal').style.display = 'flex';
-        }
+        };
         
-        function confirmBooking(bookingId) {
+        window.confirmBooking = (bookingId) => {
             currentAction = 'confirmBooking';
             currentItemId = bookingId;
+            currentItemCollection = 'tickets';
             document.getElementById('confirmMessage').innerText = 'Confirmer cette réservation ?';
             document.getElementById('confirmModal').style.display = 'flex';
-        }
+        };
         
-        function cancelBooking(bookingId) {
+        window.cancelBooking = (bookingId) => {
             currentAction = 'cancelBooking';
             currentItemId = bookingId;
+            currentItemCollection = 'tickets';
             document.getElementById('confirmMessage').innerText = 'Annuler cette réservation ?';
             document.getElementById('confirmModal').style.display = 'flex';
-        }
+        };
         
-        function confirmAction() {
-            if (currentAction === 'cancelTrip') {
-                tripsData = tripsData.filter(t => t.id !== currentItemId);
-                updateStats();
-                renderTripsTable();
-                showAlert('success', '✅ Trajet annulé');
-            } else if (currentAction === 'confirmBooking') {
-                const booking = bookingsData.find(b => b.id === currentItemId);
-                if (booking) booking.status = 'confirmed';
-                renderBookingsTable();
-                showAlert('success', '✅ Réservation confirmée');
-            } else if (currentAction === 'cancelBooking') {
-                bookingsData = bookingsData.filter(b => b.id !== currentItemId);
-                renderBookingsTable();
-                showAlert('success', '✅ Réservation annulée');
+        window.updateParcelStatus = async (parcelId) => {
+            const newStatus = prompt('Nouveau statut (En attente/En transit/Arrivé/Récupéré):');
+            if (newStatus) {
+                try {
+                    await updateDoc(doc(db, "parcels", parcelId), { statut: newStatus });
+                    showAlert('success', '✅ Statut du colis mis à jour');
+                } catch(error) {
+                    showAlert('error', 'Erreur: ' + error.message);
+                }
+            }
+        };
+        
+        async function confirmAction() {
+            try {
+                if (currentAction === 'cancelTrip') {
+                    await updateDoc(doc(db, currentItemCollection, currentItemId), { status: 'cancelled' });
+                    showAlert('success', '✅ Trajet annulé');
+                } else if (currentAction === 'confirmBooking') {
+                    await updateDoc(doc(db, currentItemCollection, currentItemId), { statut: 'Confirmé' });
+                    showAlert('success', '✅ Réservation confirmée');
+                } else if (currentAction === 'cancelBooking') {
+                    await updateDoc(doc(db, currentItemCollection, currentItemId), { statut: 'Annulé' });
+                    showAlert('success', '✅ Réservation annulée');
+                }
+            } catch(error) {
+                showAlert('error', 'Erreur: ' + error.message);
             }
             closeModal('confirmModal');
-            updateStats();
-        }
-        
-        function generateReport() {
-            const startDate = document.getElementById('reportStartDate').value;
-            const endDate = document.getElementById('reportEndDate').value;
-            
-            const totalRevenue = bookingsData.reduce((sum, b) => sum + b.amount, 0);
-            const totalBookings = bookingsData.length;
-            const avgTicket = totalBookings > 0 ? totalRevenue / totalBookings : 0;
-            
-            document.getElementById('reportResult').innerHTML = `
-                <div class="alert alert-success">
-                    <h3>📊 Rapport du ${startDate || 'début'} au ${endDate || 'aujourd\'hui'}</h3>
-                    <p>💰 Chiffre d'affaires: ${totalRevenue.toLocaleString()} FCFA</p>
-                    <p>🎫 Tickets vendus: ${totalBookings}</p>
-                    <p>📈 Ticket moyen: ${avgTicket.toLocaleString()} FCFA</p>
-                    <button onclick="exportReport()">📥 Exporter CSV</button>
-                </div>
-            `;
-        }
-        
-        function exportReport() {
-            let csv = "Ticket,Client,Trajet,Sièges,Montant,Statut\n";
-            bookingsData.forEach(b => {
-                csv += `${b.id},${b.client},${b.from}→${b.to},${b.seats},${b.amount},${b.status}\n`;
-            });
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `rapport_${currentCompany.name}_${new Date().toISOString().split('T')[0]}.csv`;
-            a.click();
-            URL.revokeObjectURL(url);
-            showAlert('success', '✅ Rapport exporté !');
         }
         
         function showAlert(type, message) {
             const alertDiv = document.createElement('div');
             alertDiv.className = `alert alert-${type}`;
             alertDiv.innerHTML = message;
-            document.body.insertBefore(alertDiv, document.body.firstChild);
+            document.body.appendChild(alertDiv);
             setTimeout(() => alertDiv.remove(), 3000);
         }
         
@@ -408,18 +466,33 @@
             document.getElementById('currentTime').innerHTML = now.toLocaleTimeString('fr-CI');
         }
         
-        function logout() {
+        async function logout() {
+            await signOut(auth);
             window.location.href = 'index.html';
         }
         
-        // Fermer modal en cliquant en dehors
         window.onclick = function(event) {
             if (event.target.classList.contains('modal')) {
                 event.target.style.display = 'none';
             }
-        }
+        };
         
-        init();
+        // Vérifier l'authentification
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                window.location.href = 'index.html';
+            } else {
+                init();
+            }
+        });
+        
+        // Exposer les fonctions globalement
+        window.showAddTripModal = () => document.getElementById('addTripModal').style.display = 'flex';
+        window.addTrip = addTrip;
+        window.toggleSection = toggleSection;
+        window.closeModal = closeModal;
+        window.confirmAction = confirmAction;
+        window.logout = logout;
     </script>
 </body>
 </html>
