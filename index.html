@@ -2,57 +2,51 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Urbain Car - WakaPass</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0B1F3A; color: white; padding: 15px; }
         h1 { color: #FF7A00; text-align: center; margin-bottom: 15px; font-size: 1.5rem; }
-        h2, h3 { margin-bottom: 10px; }
-        .card { background: #1E2F4B; padding: 15px; border-radius: 12px; margin-bottom: 15px; animation: fadeIn 0.3s ease; }
+        .card { background: #1E2F4B; padding: 15px; border-radius: 12px; margin-bottom: 15px; }
         input, select, button { width: 100%; padding: 12px; margin-bottom: 10px; border: none; border-radius: 8px; font-size: 14px; }
         input, select { background: #2A3F5F; color: white; }
-        input:focus, select:focus { outline: 2px solid #FF7A00; }
-        button { background: #FF7A00; color: #0B1F3A; font-weight: bold; cursor: pointer; transition: transform 0.1s, opacity 0.2s; }
-        button:active { transform: scale(0.98); }
+        button { background: #FF7A00; color: #0B1F3A; font-weight: bold; cursor: pointer; }
         .btn-danger { background: #dc3545; color: white; }
         .btn-success { background: #20C997; color: white; }
         .btn-secondary { background: #6c757d; color: white; }
+        .grid-buttons { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin-bottom: 15px; }
         .status { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; margin: 5px 0; }
         .status-attente { background: #ffc107; color: #0B1F3A; }
         .status-transit { background: #17a2b8; color: white; }
         .status-arrive { background: #28a745; color: white; }
         .status-recupere { background: #6c757d; color: white; }
-        .loader { text-align: center; padding: 40px; }
-        .error { background: #dc3545; padding: 10px; border-radius: 8px; margin: 10px 0; text-align: center; }
-        .success { background: #20C997; padding: 10px; border-radius: 8px; margin: 10px 0; text-align: center; }
         .seats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 15px 0; }
-        .seat { background: #2A3F5F; padding: 12px; text-align: center; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+        .seat { background: #2A3F5F; padding: 12px; text-align: center; border-radius: 8px; cursor: pointer; }
         .seat.available { background: #28a745; cursor: pointer; }
         .seat.unavailable { background: #dc3545; cursor: not-allowed; opacity: 0.6; }
         .seat.selected { background: #FF7A00; color: #0B1F3A; transform: scale(1.05); }
-        .grid-buttons { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin-bottom: 15px; }
-        .trip-card { background: #2A3F5F; padding: 12px; border-radius: 8px; margin-bottom: 10px; cursor: pointer; transition: all 0.2s; }
-        .trip-card:hover { background: #FF7A00; transform: translateX(-5px); }
+        .trip-card { background: #2A3F5F; padding: 12px; border-radius: 8px; margin-bottom: 10px; cursor: pointer; }
+        .trip-card:hover { background: #FF7A00; }
         .price { font-size: 1.2rem; font-weight: bold; color: #FF7A00; }
-        .notification { position: fixed; top: 10px; right: 10px; background: #20C997; padding: 12px; border-radius: 8px; z-index: 1000; max-width: 280px; font-size: 12px; animation: slideIn 0.3s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-        .seat-legend { display: flex; gap: 15px; margin: 15px 0; font-size: 12px; flex-wrap: wrap; }
-        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @media (max-width: 600px) { .seats-grid { grid-template-columns: repeat(3, 1fr); } .grid-buttons { grid-template-columns: 1fr; } }
+        .notification { position: fixed; top: 10px; right: 10px; background: #20C997; padding: 12px; border-radius: 8px; z-index: 1000; max-width: 280px; animation: slideIn 0.3s ease; }
+        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+        .loader { text-align: center; padding: 40px; }
+        .error { background: #dc3545; padding: 10px; border-radius: 8px; margin: 10px 0; text-align: center; }
+        .success { background: #20C997; padding: 10px; border-radius: 8px; margin: 10px 0; text-align: center; }
+        @media (max-width: 600px) { .seats-grid { grid-template-columns: repeat(3, 1fr); } }
     </style>
 </head>
 <body>
     <h1>🚍 URBAIN CAR / WAKAPASS</h1>
-    <div id="app"><div class="loader">⏳ Chargement instantané...</div></div>
+    <div id="app"><div class="loader">⏳ Connexion à Firebase...</div></div>
 
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    
-    <script>
+    <script type="module">
+        // IMPORTANT : Version avec modules ES6 pour meilleure connexion
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, query, where, getDocs, doc, updateDoc, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
         const firebaseConfig = {
             apiKey: "AIzaSyAbo6b322lE4jxbV6D4ys1MPMHjz1rdAaQ",
             authDomain: "urbaincar-wakapass.firebaseapp.com",
@@ -62,29 +56,37 @@
             appId: "1:382162245065:web:8f039bc018f2ff9cfec418"
         };
 
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const auth = firebase.auth();
+        // Initialisation
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
 
         let currentUser = null;
         let currentTrip = null;
 
         const prices = {
             "Abidjan-Bouaké": 3500, "Abidjan-Daloa": 5000, "Abidjan-San Pedro": 6000,
-            "Abidjan-Korhogo": 7500, "Abidjan-Man": 6500, "Bouaké-Abidjan": 3500,
-            "Bouaké-Daloa": 3000, "Daloa-Abidjan": 5000, "San Pedro-Abidjan": 6000
+            "Abidjan-Korhogo": 7500, "Bouaké-Abidjan": 3500, "Daloa-Abidjan": 5000
         };
+
+        function showNotification(msg) {
+            const n = document.createElement('div');
+            n.className = 'notification';
+            n.innerHTML = msg;
+            document.body.appendChild(n);
+            setTimeout(() => n.remove(), 3000);
+        }
 
         async function render() {
             const user = auth.currentUser;
             if (!user) {
                 document.getElementById("app").innerHTML = `
                     <div class="card">
-                        <h3>🔐 CONNEXION RAPIDE</h3>
-                        <input type="email" id="email" placeholder="Email" autocomplete="off" />
+                        <h3>🔐 CONNEXION</h3>
+                        <input type="email" id="email" placeholder="Email" />
                         <input type="password" id="password" placeholder="Mot de passe" />
-                        <button onclick="login()">Se connecter</button>
-                        <button onclick="register()">Créer un compte</button>
+                        <button onclick="window.login()">Se connecter</button>
+                        <button onclick="window.register()">Créer un compte</button>
                         <div id="message"></div>
                     </div>
                 `;
@@ -92,8 +94,16 @@
             }
 
             currentUser = user;
-            const userDoc = await db.collection("users").doc(user.uid).get();
-            const role = userDoc.data()?.role || "agent";
+            
+            // Vérifier le rôle
+            let role = "agent";
+            try {
+                const q = query(collection(db, "users"), where("email", "==", user.email));
+                const querySnapshot = await getDocs(q);
+                if (!querySnapshot.empty) {
+                    querySnapshot.forEach(doc => { role = doc.data().role || "agent"; });
+                }
+            } catch(e) { console.log("Erreur rôle:", e); }
 
             document.getElementById("app").innerHTML = `
                 <div class="card" style="text-align:center">
@@ -101,18 +111,18 @@
                     ${role === "admin" ? "⭐ Super Admin" : "🎫 Client"}
                 </div>
                 <div class="grid-buttons">
-                    <button onclick="showTripSearch()">🚌 RÉSERVER UN TICKET</button>
-                    <button onclick="showMyTickets()">🎫 MES TICKETS</button>
-                    <button onclick="showForm()">📦 EXPÉDIER COLIS</button>
-                    <button onclick="showSearch()">🔍 SUIVRE COLIS</button>
-                    ${role === "admin" ? '<button onclick="showAdmin()">👑 ADMIN</button>' : ''}
-                    <button onclick="logout()" class="btn-danger">🚪 QUITTER</button>
+                    <button onclick="window.showTripSearch()">🚌 RÉSERVER</button>
+                    <button onclick="window.showMyTickets()">🎫 MES TICKETS</button>
+                    <button onclick="window.showForm()">📦 COLIS</button>
+                    <button onclick="window.showSearch()">🔍 SUIVI</button>
+                    ${role === "admin" ? '<button onclick="window.showAdmin()">👑 ADMIN</button>' : ''}
+                    <button onclick="window.logout()" class="btn-danger">🚪 QUITTER</button>
                 </div>
                 <div id="content"></div>
             `;
         }
 
-        // MODULE RÉSERVATION TICKETS
+        // MODULE TICKETS
         window.showTripSearch = () => {
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
@@ -122,20 +132,16 @@
                 <div class="card">
                     <h3>🔍 RECHERCHER UN TRAJET</h3>
                     <select id="fromCity">
-                        <option value="">Départ</option>
                         <option>Abidjan</option><option>Bouaké</option><option>Daloa</option>
-                        <option>San Pedro</option><option>Korhogo</option><option>Man</option>
+                        <option>San Pedro</option><option>Korhogo</option>
                     </select>
                     <select id="toCity">
-                        <option value="">Destination</option>
-                        <option>Abidjan</option><option>Bouaké</option><option>Daloa</option>
-                        <option>San Pedro</option><option>Korhogo</option><option>Man</option>
+                        <option>Bouaké</option><option>Abidjan</option><option>Daloa</option>
+                        <option>San Pedro</option><option>Korhogo</option>
                     </select>
-                    <select id="company">
-                        <option>UTB</option><option>TSR</option><option>AFT</option><option>SAMA</option><option>Ocean CI</option>
-                    </select>
+                    <select id="company"><option>UTB</option><option>TSR</option><option>AFT</option><option>SAMA</option></select>
                     <input type="date" id="travelDate" value="${dateStr}" />
-                    <button onclick="searchTrips()">🔎 RECHERCHER</button>
+                    <button onclick="window.searchTrips()">🔎 RECHERCHER</button>
                     <div id="tripsResult"></div>
                 </div>
             `;
@@ -147,22 +153,20 @@
             const company = document.getElementById("company").value;
             const date = document.getElementById("travelDate").value;
 
-            if (!from || !to) { alert("Veuillez sélectionner départ et destination"); return; }
-
             const routeKey = `${from}-${to}`;
             const price = prices[routeKey] || 4500;
             const hours = ["06:00", "08:30", "11:00", "13:30", "16:00", "18:30"];
             
             let html = `<h3>🚍 Trajets disponibles</h3>`;
-            hours.forEach((hour, index) => {
-                const placesDispo = 45 - Math.floor(Math.random() * 20);
+            hours.forEach((hour, idx) => {
+                const places = 45 - Math.floor(Math.random() * 20);
                 html += `
-                    <div class="trip-card" onclick="selectSeats('${index}', '${company}', '${from}', '${to}', '${hour}', ${price}, '${date}')">
-                        <div style="display:flex; justify-content:space-between; align-items:center">
-                            <div><strong>${company}</strong><br>${hour} • ${from} → ${to}</div>
+                    <div class="trip-card" onclick="window.selectSeats('${idx}','${company}','${from}','${to}','${hour}',${price},'${date}')">
+                        <div style="display:flex; justify-content:space-between">
+                            <div><strong>${company}</strong><br>${hour}</div>
                             <div class="price">${price.toLocaleString()} FCFA</div>
                         </div>
-                        <div>🎫 ${placesDispo} places disponibles</div>
+                        <div>🎫 ${places} places</div>
                     </div>
                 `;
             });
@@ -176,105 +180,91 @@
             for (let row = 1; row <= 8; row++) {
                 for (let col of ['A', 'B', 'C', 'D']) {
                     const seatNum = `${col}${row}`;
-                    const isAvailable = Math.random() > 0.2;
-                    seatsHtml += `<div class="seat ${isAvailable ? 'available' : 'unavailable'}" onclick="toggleSeat(this, '${seatNum}')">${seatNum}</div>`;
+                    const available = Math.random() > 0.2;
+                    seatsHtml += `<div class="seat ${available ? 'available' : 'unavailable'}" onclick="window.toggleSeat(this)">${seatNum}</div>`;
                 }
             }
-            seatsHtml += '</div>';
-            seatsHtml += '<button class="btn-success" onclick="confirmBooking()">✅ CONFIRMER RÉSERVATION</button>';
-            seatsHtml += '<div id="selectedSeatsInfo"></div>';
+            seatsHtml += '</div><button class="btn-success" onclick="window.confirmBooking()">✅ CONFIRMER</button><div id="selectedSeatsInfo"></div>';
             
             document.getElementById("content").innerHTML = `
                 <div class="card">
-                    <h3>🎫 SÉLECTIONNEZ VOS SIÈGES</h3>
-                    <p><strong>${company}</strong> | ${from} → ${to} | ${hour} | ${price.toLocaleString()} FCFA</p>
-                    <div class="seat-legend">
-                        <span style="background:#28a745; padding:2px 8px; border-radius:4px">🟢 Disponible</span>
-                        <span style="background:#dc3545; padding:2px 8px; border-radius:4px">🔴 Indisponible</span>
-                        <span style="background:#FF7A00; padding:2px 8px; border-radius:4px">🟠 Sélectionné</span>
-                    </div>
+                    <h3>🎫 SÉLECTIONNEZ SIÈGES</h3>
+                    <p><strong>${company}</strong> | ${from} → ${to} | ${hour}</p>
                     ${seatsHtml}
-                    <button onclick="showTripSearch()" class="btn-secondary">← Retour</button>
+                    <button onclick="window.showTripSearch()" class="btn-secondary">← Retour</button>
                 </div>
             `;
         };
 
-        window.toggleSeat = (element, seatNum) => {
+        window.toggleSeat = (element) => {
             if (element.classList.contains('unavailable')) return;
             element.classList.toggle('selected');
             const selected = document.querySelectorAll('.seat.selected');
-            document.getElementById("selectedSeatsInfo").innerHTML = `
-                <div class="success" style="margin-top:10px">🎫 ${selected.length} siège(s) sélectionné(s)</div>
-            `;
+            document.getElementById("selectedSeatsInfo").innerHTML = `<div class="success">🎫 ${selected.length} siège(s)</div>`;
         };
 
         window.confirmBooking = () => {
             const selected = document.querySelectorAll('.seat.selected');
-            if (selected.length === 0) { alert("Veuillez sélectionner au moins un siège"); return; }
-            
+            if (selected.length === 0) { alert("Choisissez un siège"); return; }
             const seats = Array.from(selected).map(s => s.innerText);
-            const totalPrice = currentTrip.price * seats.length;
+            const total = currentTrip.price * seats.length;
             
             document.getElementById("content").innerHTML = `
                 <div class="card">
-                    <h3>💰 PAIEMENT MOBILE MONEY</h3>
-                    <p><strong>${currentTrip.company}</strong> | ${currentTrip.from} → ${currentTrip.to}</p>
-                    <p>🎫 Sièges: ${seats.join(', ')}</p>
-                    <p class="price">💰 Total: ${totalPrice.toLocaleString()} FCFA</p>
-                    <select id="paymentMethod">
-                        <option>📱 Orange Money</option><option>📱 MTN Money</option><option>🌊 Wave</option>
-                    </select>
-                    <input type="tel" id="phoneNumber" placeholder="Numéro (ex: 0701010101)" />
-                    <button onclick="processPayment('${seats.join(',')}', ${totalPrice})" class="btn-success">💳 PAYER</button>
-                    <button onclick="showTripSearch()" class="btn-secondary">← Annuler</button>
+                    <h3>💰 PAIEMENT</h3>
+                    <p>${currentTrip.company} | ${currentTrip.from}→${currentTrip.to}</p>
+                    <p>🎫 ${seats.join(', ')}</p>
+                    <p class="price">💰 ${total.toLocaleString()} FCFA</p>
+                    <select id="payment"><option>📱 Orange Money</option><option>📱 MTN Money</option></select>
+                    <input type="tel" id="phone" placeholder="Numéro" />
+                    <button onclick="window.processPayment('${seats.join(',')}',${total})" class="btn-success">💳 PAYER</button>
                 </div>
             `;
         };
 
-        window.processPayment = async (seats, totalPrice) => {
-            const method = document.getElementById("paymentMethod").value;
-            const phone = document.getElementById("phoneNumber").value;
-            if (!phone || phone.length < 8) { alert("Numéro valide requis"); return; }
+        window.processPayment = async (seats, total) => {
+            const method = document.getElementById("payment").value;
+            const phone = document.getElementById("phone").value;
+            if (!phone || phone.length < 8) { alert("Numéro invalide"); return; }
             
-            document.getElementById("content").innerHTML = `<div class="card" style="text-align:center"><h3>⏳ TRAITEMENT...</h3></div>`;
+            document.getElementById("content").innerHTML = `<div class="card"><div class="loader">⏳ Traitement...</div></div>`;
             
             setTimeout(async () => {
                 const ticketId = "TKT-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
-                await db.collection("tickets").add({
-                    id: ticketId, userId: auth.currentUser.uid, userEmail: auth.currentUser.email,
-                    compagnie: currentTrip.company, depart: currentTrip.from, arrivee: currentTrip.to,
-                    heure: currentTrip.hour, date: currentTrip.date, siege: seats, prix: totalPrice,
-                    moyenPaiement: method, telephone: phone, statut: "Confirmé", dateReservation: new Date()
-                });
-                
-                document.getElementById("content").innerHTML = `
-                    <div class="card success">
-                        <h3>✅ PAIEMENT RÉUSSI !</h3>
-                        <p><strong>🎫 Ticket: ${ticketId}</strong></p>
-                        <button onclick="printTicket('${ticketId}')" class="btn-success">🖨️ IMPRIMER</button>
-                        <button onclick="showMyTickets()" class="btn-primary">📋 MES TICKETS</button>
-                    </div>
-                `;
-                showNotification(`🎫 Ticket ${ticketId} confirmé !`);
+                try {
+                    await addDoc(collection(db, "tickets"), {
+                        id: ticketId, userId: currentUser.uid, userEmail: currentUser.email,
+                        compagnie: currentTrip.company, depart: currentTrip.from, arrivee: currentTrip.to,
+                        heure: currentTrip.hour, date: currentTrip.date, siege: seats, prix: total,
+                        moyenPaiement: method, telephone: phone, statut: "Confirmé", dateReservation: new Date()
+                    });
+                    document.getElementById("content").innerHTML = `
+                        <div class="card success">
+                            <h3>✅ PAIEMENT RÉUSSI !</h3>
+                            <p><strong>Ticket: ${ticketId}</strong></p>
+                            <button onclick="window.printTicket('${ticketId}')" class="btn-success">🖨️ IMPRIMER</button>
+                            <button onclick="window.showMyTickets()" class="btn-primary">📋 MES TICKETS</button>
+                        </div>
+                    `;
+                    showNotification(`🎫 Ticket ${ticketId} confirmé !`);
+                } catch(e) { alert("Erreur: " + e.message); }
             }, 1500);
         };
 
         window.printTicket = async (ticketId) => {
-            const snapshot = await db.collection("tickets").where("id", "==", ticketId).get();
+            const q = query(collection(db, "tickets"), where("id", "==", ticketId));
+            const snapshot = await getDocs(q);
             snapshot.forEach(doc => {
                 const t = doc.data();
                 const win = window.open();
                 win.document.write(`
                     <html><body style="font-family:Arial;padding:20px;text-align:center">
-                        <h1 style="color:#FF7A00">URBAIN CAR / WAKAPASS</h1>
+                        <h1 style="color:#FF7A00">URBAIN CAR</h1>
                         <div style="border:2px solid #FF7A00;padding:20px">
-                            <p><strong>N° Ticket:</strong> ${t.id}</p>
-                            <p><strong>Compagnie:</strong> ${t.compagnie}</p>
-                            <p><strong>Trajet:</strong> ${t.depart} → ${t.arrivee}</p>
-                            <p><strong>Date:</strong> ${t.date} à ${t.heure}</p>
-                            <p><strong>Sièges:</strong> ${t.siege}</p>
-                            <p><strong>Montant:</strong> ${t.prix.toLocaleString()} FCFA</p>
-                            <p>Présentez ce ticket au chargeur</p>
+                            <p><strong>🎫 ${t.id}</strong></p>
+                            <p>${t.compagnie} | ${t.depart}→${t.arrivee}</p>
+                            <p>📅 ${t.date} ${t.heure} | 🎫 ${t.siege}</p>
+                            <p>💰 ${t.prix.toLocaleString()} FCFA</p>
                         </div>
                     </body></html>
                 `);
@@ -283,7 +273,8 @@
         };
 
         window.showMyTickets = async () => {
-            const snapshot = await db.collection("tickets").where("userId", "==", auth.currentUser.uid).get();
+            const q = query(collection(db, "tickets"), where("userId", "==", currentUser.uid));
+            const snapshot = await getDocs(q);
             if (snapshot.empty) {
                 document.getElementById("content").innerHTML = `<div class="card">📭 Aucun ticket</div>`;
                 return;
@@ -291,7 +282,7 @@
             let html = `<div class="card"><h3>🎫 MES TICKETS</h3>`;
             snapshot.forEach(doc => {
                 const t = doc.data();
-                html += `<div class="trip-card"><strong>${t.compagnie}</strong> | ${t.depart}→${t.arrivee}<br>📅 ${t.date} ${t.heure} | 🎫 ${t.siege}<br>💰 ${t.prix.toLocaleString()} FCFA<br><button onclick="printTicket('${t.id}')">🖨️ Imprimer</button></div>`;
+                html += `<div class="trip-card"><strong>${t.compagnie}</strong> | ${t.depart}→${t.arrivee}<br>📅 ${t.date} ${t.heure} | 🎫 ${t.siege}<br>💰 ${t.prix.toLocaleString()} FCFA<br><button onclick="window.printTicket('${t.id}')">🖨️ Imprimer</button></div>`;
             });
             html += `</div>`;
             document.getElementById("content").innerHTML = html;
@@ -300,80 +291,119 @@
         // MODULE COLIS
         window.showForm = () => {
             document.getElementById("content").innerHTML = `
-                <div class="card"><h3>➕ EXPÉDIER UN COLIS</h3>
-                <input type="text" id="exp" placeholder="Expéditeur" /><input type="tel" id="telExp" placeholder="Téléphone" />
-                <input type="text" id="dest" placeholder="Destinataire" /><input type="tel" id="telDest" placeholder="Téléphone" />
-                <input type="text" id="type" placeholder="Type" /><input type="text" id="desc" placeholder="Description" />
-                <select id="from"><option>Abidjan</option><option>Bouaké</option></select>
-                <select id="to"><option>Bouaké</option><option>Abidjan</option></select>
-                <input type="number" id="price" placeholder="Frais" /><input type="text" id="plate" placeholder="Plaque" />
-                <button class="btn-success" onclick="saveColis()">✅ ENREGISTRER</button></div>
+                <div class="card">
+                    <h3>➕ EXPÉDIER UN COLIS</h3>
+                    <input type="text" id="exp" placeholder="Expéditeur" />
+                    <input type="tel" id="telExp" placeholder="Tél expéditeur" />
+                    <input type="text" id="dest" placeholder="Destinataire" />
+                    <input type="tel" id="telDest" placeholder="Tél destinataire" />
+                    <input type="text" id="type" placeholder="Type" />
+                    <input type="text" id="desc" placeholder="Description" />
+                    <select id="from"><option>Abidjan</option><option>Bouaké</option></select>
+                    <select id="to"><option>Bouaké</option><option>Abidjan</option></select>
+                    <input type="number" id="price" placeholder="Frais" />
+                    <input type="text" id="plate" placeholder="Plaque" />
+                    <button class="btn-success" onclick="window.saveColis()">✅ ENREGISTRER</button>
+                </div>
             `;
         };
 
         window.saveColis = async () => {
             const id = "WKPS-" + Date.now();
-            await db.collection("parcels").add({
-                id: id, expediteur: { nom: document.getElementById("exp").value, tel: document.getElementById("telExp").value },
-                destinataire: { nom: document.getElementById("dest").value, tel: document.getElementById("telDest").value },
-                details: { type: document.getElementById("type").value, description: document.getElementById("desc").value },
-                depart: document.getElementById("from").value, arrivee: document.getElementById("to").value,
-                frais: parseInt(document.getElementById("price").value) || 0, vehicule: document.getElementById("plate").value,
-                statut: "En attente", date: new Date()
-            });
-            alert(`✅ Colis ${id} enregistré !`);
+            try {
+                await addDoc(collection(db, "parcels"), {
+                    id: id, expediteur: { nom: document.getElementById("exp").value, tel: document.getElementById("telExp").value },
+                    destinataire: { nom: document.getElementById("dest").value, tel: document.getElementById("telDest").value },
+                    details: { type: document.getElementById("type").value, description: document.getElementById("desc").value },
+                    depart: document.getElementById("from").value, arrivee: document.getElementById("to").value,
+                    frais: parseInt(document.getElementById("price").value) || 0, vehicule: document.getElementById("plate").value,
+                    statut: "En attente", date: new Date()
+                });
+                alert(`✅ Colis ${id} enregistré !`);
+                showNotification(`📦 Colis ${id} expédié`);
+            } catch(e) { alert("Erreur: " + e.message); }
         };
 
         window.showSearch = () => {
             document.getElementById("content").innerHTML = `
-                <div class="card"><h3>🔍 SUIVI COLIS</h3>
-                <input type="text" id="searchCode" placeholder="Numéro colis" />
-                <button onclick="searchColis()">RECHERCHER</button><div id="result"></div></div>
+                <div class="card">
+                    <h3>🔍 SUIVI COLIS</h3>
+                    <input type="text" id="searchCode" placeholder="Numéro colis" />
+                    <button onclick="window.searchColis()">RECHERCHER</button>
+                    <div id="result"></div>
+                </div>
             `;
         };
 
         window.searchColis = async () => {
-            const snapshot = await db.collection("parcels").where("id", "==", document.getElementById("searchCode").value).get();
-            if (snapshot.empty) { document.getElementById("result").innerHTML = `<div class="error">❌ Non trouvé</div>`; return; }
-            snapshot.forEach(d => {
-                const data = d.data();
-                document.getElementById("result").innerHTML = `<div class="card"><div class="status status-attente">📌 ${data.statut}</div>
-                <p>📤 ${data.expediteur.nom}<br>📥 ${data.destinataire.nom}<br>📍 ${data.depart}→${data.arrivee}<br>💰 ${data.frais.toLocaleString()} FCFA</p></div>`;
+            const code = document.getElementById("searchCode").value;
+            const q = query(collection(db, "parcels"), where("id", "==", code));
+            const snapshot = await getDocs(q);
+            if (snapshot.empty) {
+                document.getElementById("result").innerHTML = `<div class="error">❌ Non trouvé</div>`;
+                return;
+            }
+            snapshot.forEach(doc => {
+                const d = doc.data();
+                document.getElementById("result").innerHTML = `
+                    <div class="card"><div class="status status-attente">📌 ${d.statut}</div>
+                    <p>📤 ${d.expediteur.nom} (${d.expediteur.tel})<br>📥 ${d.destinataire.nom}<br>📍 ${d.depart}→${d.arrivee}<br>💰 ${d.frais.toLocaleString()} FCFA</p></div>
+                `;
             });
         };
 
         window.showAdmin = async () => {
-            const tickets = await db.collection("tickets").get();
+            const q = query(collection(db, "tickets"), orderBy("dateReservation", "desc"), limit(50));
+            const snapshot = await getDocs(q);
             document.getElementById("content").innerHTML = `
-                <div class="card"><h2>👑 ADMIN</h2>
-                <div style="background:#FF7A00;padding:15px;border-radius:10px;text-align:center">
-                <div style="font-size:2rem">${tickets.size}</div><div>🎫 Tickets vendus</div></div>
-                <div id="list"></div></div>`;
+                <div class="card">
+                    <h2>👑 SUPER ADMIN</h2>
+                    <div style="background:#FF7A00;padding:15px;border-radius:10px;text-align:center">
+                        <div style="font-size:2rem">${snapshot.size}</div>
+                        <div>🎫 Tickets vendus</div>
+                    </div>
+                    <div id="list"></div>
+                </div>
+            `;
             let html = "";
-            tickets.docs.slice(0,10).forEach(d => { const t = d.data(); html += `<div style="padding:10px;border-bottom:1px solid #2A3F5F">🎫 ${t.id} - ${t.depart}→${t.arrivee} - ${t.prix.toLocaleString()} FCFA</div>`; });
+            snapshot.forEach(doc => {
+                const t = doc.data();
+                html += `<div style="padding:10px;border-bottom:1px solid #2A3F5F">🎫 ${t.id} - ${t.depart}→${t.arrivee} - ${t.prix.toLocaleString()} FCFA</div>`;
+            });
             document.getElementById("list").innerHTML = html;
         };
 
-        // AUTH
+        // AUTHENTIFICATION
         window.login = async () => {
+            const email = document.getElementById("email").value;
+            const pwd = document.getElementById("password").value;
             try {
-                await auth.signInWithEmailAndPassword(document.getElementById("email").value, document.getElementById("password").value);
-                const userDoc = await db.collection("users").doc(auth.currentUser.uid).get();
-                if (!userDoc.exists) await db.collection("users").doc(auth.currentUser.uid).set({ email: auth.currentUser.email, role: "agent" });
+                await signInWithEmailAndPassword(auth, email, pwd);
                 render();
-            } catch(e) { document.getElementById("message").innerHTML = `<div class="error">❌ ${e.message}</div>`; }
+            } catch(e) {
+                document.getElementById("message").innerHTML = `<div class="error">❌ ${e.message}</div>`;
+            }
         };
+
         window.register = async () => {
+            const email = document.getElementById("email").value;
+            const pwd = document.getElementById("password").value;
             try {
-                await auth.createUserWithEmailAndPassword(document.getElementById("email").value, document.getElementById("password").value);
-                await db.collection("users").doc(auth.currentUser.uid).set({ email: auth.currentUser.email, role: "agent" });
-                document.getElementById("message").innerHTML = `<div class="success">✅ Compte créé !</div>`;
-            } catch(e) { document.getElementById("message").innerHTML = `<div class="error">❌ ${e.message}</div>`; }
+                const userCred = await createUserWithEmailAndPassword(auth, email, pwd);
+                await addDoc(collection(db, "users"), { email: email, role: "agent", uid: userCred.user.uid });
+                document.getElementById("message").innerHTML = `<div class="success">✅ Compte créé ! Connectez-vous.</div>`;
+            } catch(e) {
+                document.getElementById("message").innerHTML = `<div class="error">❌ ${e.message}</div>`;
+            }
         };
-        window.logout = async () => { await auth.signOut(); render(); };
-        function showNotification(msg) { const n = document.createElement('div'); n.className = 'notification'; n.innerHTML = msg; document.body.appendChild(n); setTimeout(() => n.remove(), 3000); }
-        
-        auth.onAuthStateChanged(() => render());
+
+        window.logout = async () => {
+            await signOut(auth);
+            render();
+        };
+
+        // DÉMARRAGE
+        onAuthStateChanged(auth, () => render());
     </script>
 </body>
 </html>
