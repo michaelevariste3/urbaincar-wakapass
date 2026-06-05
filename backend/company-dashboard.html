@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Compagnie - Urbain Car</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #0B1F3A; color: white; padding: 20px; }
+        .header { background: #FF7A00; padding: 20px; border-radius: 12px; margin-bottom: 20px; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: #1E2F4B; padding: 15px; border-radius: 10px; text-align: center; }
+        .stat-number { font-size: 2rem; font-weight: bold; color: #FF7A00; }
+        .trips-list { background: #1E2F4B; padding: 20px; border-radius: 12px; }
+        .trip-item { padding: 10px; border-bottom: 1px solid #2A3F5F; display: flex; justify-content: space-between; }
+        button { background: #FF7A00; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; margin: 5px; }
+        select, input { padding: 10px; margin: 5px; border-radius: 5px; border: none; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏢 [Nom Compagnie] - Dashboard</h1>
+        <p>Gérez vos trajets et réservations en temps réel</p>
+    </div>
+    
+    <div class="stats">
+        <div class="stat-card">
+            <div class="stat-number" id="totalTrips">0</div>
+            <div>Trajets aujourd'hui</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="totalSeats">0</div>
+            <div>Sièges réservés</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="totalRevenue">0 FCFA</div>
+            <div>Chiffre d'affaires</div>
+        </div>
+    </div>
+    
+    <div class="trips-list">
+        <h2>📋 Trajets programmés</h2>
+        <div id="tripsContainer"></div>
+    </div>
+    
+    <script>
+        // Simulation des données compagnie
+        const companyData = {
+            name: 'UTB',
+            trips: [
+                { id: 1, from: 'Abidjan', to: 'Bouaké', time: '06:00', seats: 45, booked: 12, revenue: 42000 },
+                { id: 2, from: 'Abidjan', to: 'Bouaké', time: '10:00', seats: 45, booked: 28, revenue: 98000 },
+                { id: 3, from: 'Abidjan', to: 'Daloa', time: '07:30', seats: 45, booked: 35, revenue: 175000 },
+                { id: 4, from: 'Abidjan', to: 'San Pedro', time: '14:00', seats: 45, booked: 18, revenue: 108000 }
+            ]
+        };
+        
+        function loadDashboard() {
+            const totalTrips = companyData.trips.length;
+            const totalSeats = companyData.trips.reduce((sum, t) => sum + t.booked, 0);
+            const totalRevenue = companyData.trips.reduce((sum, t) => sum + t.revenue, 0);
+            
+            document.getElementById('totalTrips').innerText = totalTrips;
+            document.getElementById('totalSeats').innerText = totalSeats;
+            document.getElementById('totalRevenue').innerText = totalRevenue.toLocaleString() + ' FCFA';
+            
+            const container = document.getElementById('tripsContainer');
+            container.innerHTML = companyData.trips.map(trip => `
+                <div class="trip-item">
+                    <div>
+                        <strong>${trip.from} → ${trip.to}</strong><br>
+                        Départ: ${trip.time}
+                    </div>
+                    <div>
+                        📊 ${trip.booked}/${trip.seats} places<br>
+                        💰 ${trip.revenue.toLocaleString()} FCFA
+                    </div>
+                    <div>
+                        <button onclick="viewTrip(${trip.id})">Voir détails</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function viewTrip(tripId) {
+            alert(`Détails du trajet #${tripId}\nFonctionnalité avancée bientôt disponible`);
+        }
+        
+        loadDashboard();
+    </script>
+</body>
+</html>

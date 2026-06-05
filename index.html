@@ -2,339 +2,54 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="theme-color" content="#FF7A00">
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="https://via.placeholder.com/192x192/FF7A00/white?text=UC">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Urbain Car - WakaPass</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0B1F3A; color: white; padding: 15px; }
         h1 { color: #FF7A00; text-align: center; margin-bottom: 15px; font-size: 1.5rem; }
-        .card { background: #1E2F4B; padding: 15px; border-radius: 12px; margin-bottom: 15px; animation: fadeIn 0.3s ease; }
-        input, select, button { width: 100%; padding: 12px; margin-bottom: 10px; border: none; border-radius: 8px; font-size: 14px; }
-        input, select { background: #2A3F5F; color: white; }
-        button { background: #FF7A00; color: #0B1F3A; font-weight: bold; cursor: pointer; transition: transform 0.1s; }
-        button:active { transform: scale(0.98); }
+        .card { background: #1E2F4B; padding: 15px; border-radius: 12px; margin-bottom: 15px; }
+        .company-card { background: linear-gradient(135deg, #FF7A00, #FF9F3D); color: #0B1F3A; cursor: pointer; transition: transform 0.2s; }
+        .company-card:hover { transform: translateY(-5px); }
+        .companies-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .company-logo { font-size: 3rem; text-align: center; }
+        .company-name { text-align: center; font-weight: bold; margin-top: 10px; }
+        button { background: #FF7A00; color: #0B1F3A; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin: 5px; }
         .btn-danger { background: #dc3545; color: white; }
-        .btn-success { background: #20C997; color: white; }
-        .btn-secondary { background: #6c757d; color: white; }
-        .grid-buttons { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin-bottom: 15px; }
-        .status { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; margin: 5px 0; }
-        .status-attente { background: #ffc107; color: #0B1F3A; }
-        .status-transit { background: #17a2b8; color: white; }
-        .status-arrive { background: #28a745; color: white; }
-        .status-recupere { background: #6c757d; color: white; }
-        .seats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 15px 0; }
-        .seat { background: #2A3F5F; padding: 12px; text-align: center; border-radius: 8px; cursor: pointer; }
-        .seat.available { background: #28a745; cursor: pointer; }
-        .seat.unavailable { background: #dc3545; cursor: not-allowed; opacity: 0.6; }
-        .seat.selected { background: #FF7A00; color: #0B1F3A; transform: scale(1.05); }
-        .trip-card { background: #2A3F5F; padding: 12px; border-radius: 8px; margin-bottom: 10px; cursor: pointer; }
-        .trip-card:hover { background: #FF7A00; }
-        .price { font-size: 1.2rem; font-weight: bold; color: #FF7A00; }
-        .notification { position: fixed; top: 10px; right: 10px; background: #20C997; padding: 12px; border-radius: 8px; z-index: 1000; max-width: 280px; animation: slideIn 0.3s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-        .install-btn { background: #20C997; color: white; margin-top: 10px; }
-        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .loader { text-align: center; padding: 40px; }
-        .error { background: #dc3545; padding: 10px; border-radius: 8px; margin: 10px 0; text-align: center; }
-        .success { background: #20C997; padding: 10px; border-radius: 8px; margin: 10px 0; text-align: center; }
-        @media (max-width: 600px) { .seats-grid { grid-template-columns: repeat(3, 1fr); } .grid-buttons { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
     <h1>🚍 URBAIN CAR / WAKAPASS</h1>
-    <div id="app"><div class="loader">⏳ Chargement...</div></div>
+    
+    <div class="card">
+        <h2>🏢 Accès Compagnies de Transport</h2>
+        <p>Chaque compagnie dispose de son propre espace de gestion</p>
+    </div>
+    
+    <div class="companies-grid" id="companiesGrid"></div>
+    
+    <div class="card" style="text-align: center;">
+        <button onclick="location.href='index.html'">🚌 Retour à l'accueil</button>
+        <button onclick="location.href='company-dashboard.html?company=UTB'" class="btn-danger">🔐 Accès Admin</button>
+    </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, query, where, getDocs, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyAbo6b322lE4jxbV6D4ys1MPMHjz1rdAaQ",
-            authDomain: "urbaincar-wakapass.firebaseapp.com",
-            projectId: "urbaincar-wakapass",
-            storageBucket: "urbaincar-wakapass.firebasestorage.app",
-            messagingSenderId: "382162245065",
-            appId: "1:382162245065:web:8f039bc018f2ff9cfec418"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-
-        let currentUser = null;
-        let currentTrip = null;
-        let deferredPrompt = null;
-
-        const prices = {
-            "Abidjan-Bouaké": 3500, "Abidjan-Daloa": 5000, "Abidjan-San Pedro": 6000,
-            "Abidjan-Korhogo": 7500, "Bouaké-Abidjan": 3500, "Daloa-Abidjan": 5000
-        };
-
-        // PWA Installation
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            const installDiv = document.createElement('div');
-            installDiv.className = 'card';
-            installDiv.innerHTML = '<button class="install-btn" onclick="installApp()">📱 INSTALLER L\'APPLICATION</button>';
-            document.getElementById('app').appendChild(installDiv);
-        });
-
-        window.installApp = () => {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
-            }
-        };
-
-        function showNotification(msg) {
-            const n = document.createElement('div');
-            n.className = 'notification';
-            n.innerHTML = msg;
-            document.body.appendChild(n);
-            setTimeout(() => n.remove(), 3000);
-        }
-
-        async function render() {
-            const user = auth.currentUser;
-            if (!user) {
-                document.getElementById("app").innerHTML = `
-                    <div class="card">
-                        <h3>🔐 CONNEXION</h3>
-                        <input type="email" id="email" placeholder="Email" />
-                        <input type="password" id="password" placeholder="Mot de passe" />
-                        <button onclick="window.login()">Se connecter</button>
-                        <button onclick="window.register()">Créer un compte</button>
-                        <div id="message"></div>
-                    </div>
-                `;
-                return;
-            }
-
-            currentUser = user;
-            let role = "agent";
-            try {
-                const q = query(collection(db, "users"), where("email", "==", user.email));
-                const snapshot = await getDocs(q);
-                if (!snapshot.empty) snapshot.forEach(doc => { role = doc.data().role || "agent"; });
-            } catch(e) { console.log(e); }
-
-            document.getElementById("app").innerHTML = `
-                <div class="card" style="text-align:center">
-                    <strong>✅ ${user.email}</strong><br>
-                    ${role === "admin" ? "⭐ Super Admin" : "🎫 Client"}
-                </div>
-                <div class="grid-buttons">
-                    <button onclick="window.showTripSearch()">🚌 RÉSERVER</button>
-                    <button onclick="window.showMyTickets()">🎫 MES TICKETS</button>
-                    <button onclick="window.showForm()">📦 COLIS</button>
-                    <button onclick="window.showSearch()">🔍 SUIVI</button>
-                    ${role === "admin" ? '<button onclick="window.showAdmin()">👑 ADMIN</button>' : ''}
-                    <button onclick="window.logout()" class="btn-danger">🚪 QUITTER</button>
-                </div>
-                <div id="content"></div>
-            `;
-        }
-
-        // MODULE TICKETS (même code que précédemment)
-        window.showTripSearch = () => {
-            const tomorrow = new Date();
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            const dateStr = tomorrow.toISOString().split('T')[0];
-            
-            document.getElementById("content").innerHTML = `
-                <div class="card">
-                    <h3>🔍 RECHERCHER UN TRAJET</h3>
-                    <select id="fromCity">
-                        <option>Abidjan</option><option>Bouaké</option><option>Daloa</option>
-                        <option>San Pedro</option><option>Korhogo</option>
-                    </select>
-                    <select id="toCity">
-                        <option>Bouaké</option><option>Abidjan</option><option>Daloa</option>
-                        <option>San Pedro</option><option>Korhogo</option>
-                    </select>
-                    <select id="company"><option>UTB</option><option>TSR</option><option>AFT</option><option>SAMA</option></select>
-                    <input type="date" id="travelDate" value="${dateStr}" />
-                    <button onclick="window.searchTrips()">🔎 RECHERCHER</button>
-                    <div id="tripsResult"></div>
-                </div>
-            `;
-        };
-
-        window.searchTrips = () => {
-            const from = document.getElementById("fromCity").value;
-            const to = document.getElementById("toCity").value;
-            const company = document.getElementById("company").value;
-            const date = document.getElementById("travelDate").value;
-            const price = prices[`${from}-${to}`] || 4500;
-            const hours = ["06:00", "08:30", "11:00", "13:30", "16:00", "18:30"];
-            
-            let html = `<h3>🚍 Trajets disponibles</h3>`;
-            hours.forEach((hour, idx) => {
-                const places = 45 - Math.floor(Math.random() * 20);
-                html += `<div class="trip-card" onclick="window.selectSeats('${idx}','${company}','${from}','${to}','${hour}',${price},'${date}')">
-                    <div style="display:flex; justify-content:space-between"><div><strong>${company}</strong><br>${hour}</div><div class="price">${price.toLocaleString()} FCFA</div></div>
-                    <div>🎫 ${places} places</div>
-                </div>`;
-            });
-            document.getElementById("tripsResult").innerHTML = html;
-        };
-
-        window.selectSeats = (id, company, from, to, hour, price, date) => {
-            currentTrip = { id, company, from, to, hour, price, date };
-            let seatsHtml = '<div class="seats-grid">';
-            for (let row = 1; row <= 8; row++) {
-                for (let col of ['A', 'B', 'C', 'D']) {
-                    const seatNum = `${col}${row}`;
-                    const available = Math.random() > 0.2;
-                    seatsHtml += `<div class="seat ${available ? 'available' : 'unavailable'}" onclick="window.toggleSeat(this)">${seatNum}</div>`;
-                }
-            }
-            seatsHtml += '</div><button class="btn-success" onclick="window.confirmBooking()">✅ CONFIRMER</button><div id="selectedSeatsInfo"></div>';
-            
-            document.getElementById("content").innerHTML = `<div class="card"><h3>🎫 SÉLECTIONNEZ SIÈGES</h3><p><strong>${company}</strong> | ${from} → ${to} | ${hour}</p>${seatsHtml}<button onclick="window.showTripSearch()" class="btn-secondary">← Retour</button></div>`;
-        };
-
-        window.toggleSeat = (element) => {
-            if (element.classList.contains('unavailable')) return;
-            element.classList.toggle('selected');
-            const selected = document.querySelectorAll('.seat.selected');
-            document.getElementById("selectedSeatsInfo").innerHTML = `<div class="success">🎫 ${selected.length} siège(s)</div>`;
-        };
-
-        window.confirmBooking = () => {
-            const selected = document.querySelectorAll('.seat.selected');
-            if (selected.length === 0) { alert("Choisissez un siège"); return; }
-            const seats = Array.from(selected).map(s => s.innerText);
-            const total = currentTrip.price * seats.length;
-            
-            document.getElementById("content").innerHTML = `<div class="card"><h3>💰 PAIEMENT</h3><p>${currentTrip.company} | ${currentTrip.from}→${currentTrip.to}</p><p>🎫 ${seats.join(', ')}</p><p class="price">💰 ${total.toLocaleString()} FCFA</p><select id="payment"><option>📱 Orange Money</option><option>📱 MTN Money</option><option>🌊 Wave</option></select><input type="tel" id="phone" placeholder="Numéro (ex: 0701010101)" /><button onclick="window.processPayment('${seats.join(',')}',${total})" class="btn-success">💳 PAYER</button></div>`;
-        };
-
-        window.processPayment = async (seats, total) => {
-            const method = document.getElementById("payment").value;
-            const phone = document.getElementById("phone").value;
-            if (!phone || phone.length < 8) { alert("Numéro invalide"); return; }
-            
-            document.getElementById("content").innerHTML = `<div class="card"><div class="loader">⏳ Traitement...</div></div>`;
-            
-            setTimeout(async () => {
-                const ticketId = "TKT-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
-                try {
-                    await addDoc(collection(db, "tickets"), {
-                        id: ticketId, userId: currentUser.uid, userEmail: currentUser.email,
-                        compagnie: currentTrip.company, depart: currentTrip.from, arrivee: currentTrip.to,
-                        heure: currentTrip.hour, date: currentTrip.date, siege: seats, prix: total,
-                        moyenPaiement: method, telephone: phone, statut: "Confirmé", dateReservation: new Date()
-                    });
-                    document.getElementById("content").innerHTML = `<div class="card success"><h3>✅ PAIEMENT RÉUSSI !</h3><p><strong>Ticket: ${ticketId}</strong></p><button onclick="window.printTicket('${ticketId}')" class="btn-success">🖨️ IMPRIMER</button><button onclick="window.showMyTickets()" class="btn-primary">📋 MES TICKETS</button></div>`;
-                    showNotification(`🎫 Ticket ${ticketId} confirmé !`);
-                } catch(e) { alert("Erreur: " + e.message); }
-            }, 1500);
-        };
-
-        window.printTicket = async (ticketId) => {
-            const q = query(collection(db, "tickets"), where("id", "==", ticketId));
-            const snapshot = await getDocs(q);
-            snapshot.forEach(doc => {
-                const t = doc.data();
-                const win = window.open();
-                win.document.write(`<html><body style="font-family:Arial;padding:20px;text-align:center"><h1 style="color:#FF7A00">URBAIN CAR / WAKAPASS</h1><div style="border:2px solid #FF7A00;padding:20px;border-radius:10px"><p><strong>🎫 ${t.id}</strong></p><p>${t.compagnie} | ${t.depart} → ${t.arrivee}</p><p>📅 ${t.date} à ${t.heure}</p><p>🎫 Sièges: ${t.siege}</p><p>💰 ${t.prix.toLocaleString()} FCFA</p><p>📱 ${t.moyenPaiement} - ${t.telephone}</p><hr><p style="font-size:12px">Présentez ce ticket au chargeur</p></div></body></html>`);
-                win.print();
-            });
-        };
-
-        window.showMyTickets = async () => {
-            const q = query(collection(db, "tickets"), where("userId", "==", currentUser.uid));
-            const snapshot = await getDocs(q);
-            if (snapshot.empty) { document.getElementById("content").innerHTML = `<div class="card">📭 Aucun ticket</div>`; return; }
-            let html = `<div class="card"><h3>🎫 MES TICKETS</h3>`;
-            snapshot.forEach(doc => {
-                const t = doc.data();
-                html += `<div class="trip-card"><strong>${t.compagnie}</strong> | ${t.depart}→${t.arrivee}<br>📅 ${t.date} ${t.heure} | 🎫 ${t.siege}<br>💰 ${t.prix.toLocaleString()} FCFA<br><button onclick="window.printTicket('${t.id}')">🖨️ Imprimer</button></div>`;
-            });
-            html += `</div>`;
-            document.getElementById("content").innerHTML = html;
-        };
-
-        // MODULE COLIS
-        window.showForm = () => {
-            document.getElementById("content").innerHTML = `<div class="card"><h3>➕ EXPÉDIER UN COLIS</h3><input type="text" id="exp" placeholder="Expéditeur" /><input type="tel" id="telExp" placeholder="Tél expéditeur" /><input type="text" id="dest" placeholder="Destinataire" /><input type="tel" id="telDest" placeholder="Tél destinataire" /><input type="text" id="type" placeholder="Type" /><input type="text" id="desc" placeholder="Description" /><select id="from"><option>Abidjan</option><option>Bouaké</option></select><select id="to"><option>Bouaké</option><option>Abidjan</option></select><input type="number" id="price" placeholder="Frais" /><input type="text" id="plate" placeholder="Plaque" /><button class="btn-success" onclick="window.saveColis()">✅ ENREGISTRER</button></div>`;
-        };
-
-        window.saveColis = async () => {
-            const id = "WKPS-" + Date.now();
-            try {
-                await addDoc(collection(db, "parcels"), { id, expediteur: { nom: document.getElementById("exp").value, tel: document.getElementById("telExp").value }, destinataire: { nom: document.getElementById("dest").value, tel: document.getElementById("telDest").value }, details: { type: document.getElementById("type").value, description: document.getElementById("desc").value }, depart: document.getElementById("from").value, arrivee: document.getElementById("to").value, frais: parseInt(document.getElementById("price").value) || 0, vehicule: document.getElementById("plate").value, statut: "En attente", date: new Date() });
-                alert(`✅ Colis ${id} enregistré !`);
-                showNotification(`📦 Colis ${id} expédié`);
-            } catch(e) { alert("Erreur: " + e.message); }
-        };
-
-        window.showSearch = () => {
-            document.getElementById("content").innerHTML = `<div class="card"><h3>🔍 SUIVI COLIS</h3><input type="text" id="searchCode" placeholder="Numéro colis" /><button onclick="window.searchColis()">RECHERCHER</button><div id="result"></div></div>`;
-        };
-
-        window.searchColis = async () => {
-            const code = document.getElementById("searchCode").value;
-            const q = query(collection(db, "parcels"), where("id", "==", code));
-            const snapshot = await getDocs(q);
-            if (snapshot.empty) { document.getElementById("result").innerHTML = `<div class="error">❌ Non trouvé</div>`; return; }
-            snapshot.forEach(doc => {
-                const d = doc.data();
-                document.getElementById("result").innerHTML = `<div class="card"><div class="status status-attente">📌 ${d.statut}</div><p>📤 ${d.expediteur.nom} (${d.expediteur.tel})<br>📥 ${d.destinataire.nom}<br>📍 ${d.depart}→${d.arrivee}<br>💰 ${d.frais.toLocaleString()} FCFA</p></div>`;
-            });
-        };
-
-        window.showAdmin = async () => {
-            const q = query(collection(db, "tickets"), orderBy("dateReservation", "desc"), limit(50));
-            const snapshot = await getDocs(q);
-            let total = 0;
-            snapshot.forEach(doc => total += doc.data().prix);
-            document.getElementById("content").innerHTML = `<div class="card"><h2>👑 SUPER ADMIN</h2><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px"><div style="background:#FF7A00;padding:15px;border-radius:10px;text-align:center"><div style="font-size:2rem">${snapshot.size}</div><div>🎫 Tickets</div></div><div style="background:#20C997;padding:15px;border-radius:10px;text-align:center"><div style="font-size:2rem">${total.toLocaleString()} FCFA</div><div>CA Total</div></div></div><div id="list"></div></div>`;
-            let html = "";
-            snapshot.forEach(doc => {
-                const t = doc.data();
-                html += `<div style="padding:10px;border-bottom:1px solid #2A3F5F">🎫 ${t.id} - ${t.depart}→${t.arrivee} - ${t.prix.toLocaleString()} FCFA - ${t.statut}</div>`;
-            });
-            document.getElementById("list").innerHTML = html;
-        };
-
-        // AUTH
-        window.login = async () => {
-            const email = document.getElementById("email").value;
-            const pwd = document.getElementById("password").value;
-            try {
-                await signInWithEmailAndPassword(auth, email, pwd);
-                render();
-            } catch(e) { document.getElementById("message").innerHTML = `<div class="error">❌ ${e.message}</div>`; }
-        };
-
-        window.register = async () => {
-            const email = document.getElementById("email").value;
-            const pwd = document.getElementById("password").value;
-            try {
-                const userCred = await createUserWithEmailAndPassword(auth, email, pwd);
-                await addDoc(collection(db, "users"), { email, role: "agent", uid: userCred.user.uid });
-                document.getElementById("message").innerHTML = `<div class="success">✅ Compte créé ! Connectez-vous.</div>`;
-            } catch(e) { document.getElementById("message").innerHTML = `<div class="error">❌ ${e.message}</div>`; }
-        };
-
-        window.logout = async () => {
-            await signOut(auth);
-            render();
-        };
-
-        onAuthStateChanged(auth, () => render());
-
-        // Service Worker
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js');
-        }
+    <script>
+        const companies = [
+            { name: 'UTB', logo: '🚌', color: '#FF7A00', description: 'Transport interurbain' },
+            { name: 'TSR', logo: '🚍', color: '#17a2b8', description: 'Voyages confortables' },
+            { name: 'AFT', logo: '🚐', color: '#28a745', description: 'Express rapide' },
+            { name: 'SAMA', logo: '🚎', color: '#6f42c1', description: 'Transport SAMA' },
+            { name: 'Ocean CI', logo: '⛴️', color: '#20c997', description: 'Lignes côtières' }
+        ];
+        
+        const grid = document.getElementById('companiesGrid');
+        grid.innerHTML = companies.map(company => `
+            <div class="card company-card" onclick="location.href='company-dashboard.html?company=${company.name}'" style="background: ${company.color};">
+                <div class="company-logo">${company.logo}</div>
+                <div class="company-name">${company.name}</div>
+                <div style="font-size: 12px; text-align: center; margin-top: 5px;">${company.description}</div>
+            </div>
+        `).join('');
     </script>
 </body>
 </html>

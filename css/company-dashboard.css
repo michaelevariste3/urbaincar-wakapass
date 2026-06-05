@@ -1,0 +1,60 @@
+/* Styles spécifiques pour le dashboard compagnie */
+.dashboard-container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.chart-container {
+    background: #1E2F4B;
+    padding: 20px;
+    border-radius: 12px;
+    margin-top: 20px;
+}
+
+.revenue-trend {
+    background: linear-gradient(135deg, #FF7A00, #FF9F3D);
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+.revenue-trend h3 {
+    color: #0B1F3A;
+    margin-bottom: 10px;
+}
+
+.revenue-amount {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #0B1F3A;
+}
+
+.notification-bell {
+    position: relative;
+    cursor: pointer;
+}
+
+.notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #dc3545;
+    color: white;
+    border-radius: 50%;
+    padding: 2px 6px;
+    font-size: 10px;
+}
+
+@media print {
+    .no-print {
+        display: none;
+    }
+    body {
+        background: white;
+        color: black;
+    }
+    .stat-card, .section {
+        background: white;
+        border: 1px solid #ddd;
+    }
+}

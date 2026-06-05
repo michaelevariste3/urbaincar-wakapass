@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Compagnie - Urbain Car</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0B1F3A; color: white; padding: 20px; }
+        
+        /* Header */
+        .header { background: linear-gradient(135deg, #FF7A00, #FF9F3D); padding: 20px; border-radius: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+        .company-info h1 { color: #0B1F3A; margin-bottom: 5px; }
+        .company-info p { color: #0B1F3A; opacity: 0.9; }
+        .logout-btn { background: #0B1F3A; color: #FF7A00; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        
+        /* Statistiques */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: #1E2F4B; padding: 20px; border-radius: 12px; text-align: center; transition: transform 0.2s; }
+        .stat-card:hover { transform: translateY(-5px); }
+        .stat-icon { font-size: 2rem; margin-bottom: 10px; }
+        .stat-number { font-size: 1.8rem; font-weight: bold; color: #FF7A00; }
+        .stat-label { font-size: 0.85rem; opacity: 0.8; margin-top: 5px; }
+        
+        /* Sections */
+        .section { background: #1E2F4B; border-radius: 12px; margin-bottom: 20px; overflow: hidden; }
+        .section-header { background: #2A3F5F; padding: 15px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .section-header h2 { font-size: 1.2rem; }
+        .section-content { padding: 20px; display: none; }
+        .section-content.active { display: block; }
+        
+        /* Tableaux */
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #2A3F5F; }
+        th { background: #FF7A00; color: #0B1F3A; }
+        tr:hover { background: #2A3F5F; }
+        
+        /* Formulaires */
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: #FF7A00; font-weight: bold; }
+        input, select, textarea { width: 100%; padding: 10px; background: #2A3F5F; border: none; border-radius: 6px; color: white; }
+        button { background: #FF7A00; color: #0B1F3A; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: opacity 0.2s; }
+        button:hover { opacity: 0.9; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-success { background: #20C997; color: white; }
+        
+        /* Badges */
+        .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+        .badge-confirmed { background: #20C997; color: white; }
+        .badge-pending { background: #ffc107; color: #0B1F3A; }
+        .badge-cancelled { background: #dc3545; color: white; }
+        
+        /* Modal */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background: #1E2F4B; padding: 30px; border-radius: 12px; max-width: 500px; width: 90%; max-height: 80%; overflow-y: auto; }
+        .close { float: right; cursor: pointer; font-size: 24px; }
+        
+        /* Alertes */
+        .alert { padding: 12px; border-radius: 8px; margin-bottom: 15px; }
+        .alert-success { background: #20C997; color: white; }
+        .alert-error { background: #dc3545; color: white; }
+        
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .stats-grid { grid-template-columns: 1fr; }
+            table { font-size: 12px; }
+            th, td { padding: 8px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="company-info">
+            <h1 id="companyName">🏢 Chargement...</h1>
+            <p>Gestion des trajets et réservations</p>
+        </div>
+        <div>
+            <span id="currentTime" style="margin-right: 15px;"></span>
+            <button class="logout-btn" onclick="logout()">🚪 Déconnexion</button>
+        </div>
+    </div>
+    
+    <div class="stats-grid" id="statsGrid">
+        <div class="stat-card"><div class="stat-icon">🚌</div><div class="stat-number" id="totalTrips">0</div><div class="stat-label">Trajets aujourd'hui</div></div>
+        <div class="stat-card"><div class="stat-icon">🎫</div><div class="stat-number" id="totalBookings">0</div><div class="stat-label">Réservations</div></div>
+        <div class="stat-card"><div class="stat-icon">💺</div><div class="stat-number" id="totalSeats">0</div><div class="stat-label">Sièges vendus</div></div>
+        <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-number" id="totalRevenue">0 FCFA</div><div class="stat-label">Chiffre d'affaires</div></div>
+        <div class="stat-card"><div class="stat-icon">⭐</div><div class="stat-number" id="occupancyRate">0%</div><div class="stat-label">Taux d'occupation</div></div>
+    </div>
+    
+    <div class="section">
+        <div class="section-header" onclick="toggleSection('tripsSection')">
+            <h2>🚍 Gestion des Trajets</h2>
+            <span>▼</span>
+        </div>
+        <div id="tripsSection" class="section-content">
+            <button onclick="showAddTripModal()" style="margin-bottom: 15px;">➕ Ajouter un trajet</button>
+            <div style="overflow-x: auto;">
+                <table id="tripsTable">
+                    <thead><tr><th>Départ</th><th>Destination</th><th>Date</th><th>Heure</th><th>Places</th><th>Réservées</th><th>Actions</th></tr></thead>
+                    <tbody id="tripsTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <div class="section-header" onclick="toggleSection('bookingsSection')">
+            <h2>🎫 Réservations en cours</h2>
+            <span>▼</span>
+        </div>
+        <div id="bookingsSection" class="section-content">
+            <div style="overflow-x: auto;">
+                <table id="bookingsTable">
+                    <thead><tr><th>Ticket N°</th><th>Client</th><th>Trajet</th><th>Sièges</th><th>Montant</th><th>Statut</th><th>Actions</th></tr></thead>
+                    <tbody id="bookingsTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <div class="section-header" onclick="toggleSection('reportsSection')">
+            <h2>📊 Rapports et Statistiques</h2>
+            <span>▼</span>
+        </div>
+        <div id="reportsSection" class="section-content">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                <div>
+                    <h3>📅 Période</h3>
+                    <input type="date" id="reportStartDate" />
+                    <input type="date" id="reportEndDate" />
+                    <button onclick="generateReport()">Générer rapport</button>
+                </div>
+                <div>
+                    <h3>📈 Top destinations</h3>
+                    <canvas id="destinationsChart" width="300" height="200"></canvas>
+                </div>
+            </div>
+            <div id="reportResult" style="margin-top: 20px;"></div>
+        </div>
+    </div>
+    
+    <!-- Modal Ajout Trajet -->
+    <div id="addTripModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('addTripModal')">&times;</span>
+            <h2>➕ Nouveau trajet</h2>
+            <div class="form-group"><label>Départ</label><select id="tripFrom"><option>Abidjan</option><option>Bouaké</option><option>Daloa</option><option>San Pedro</option><option>Korhogo</option></select></div>
+            <div class="form-group"><label>Destination</label><select id="tripTo"><option>Bouaké</option><option>Abidjan</option><option>Daloa</option><option>San Pedro</option><option>Korhogo</option></select></div>
+            <div class="form-group"><label>Date</label><input type="date" id="tripDate" /></div>
+            <div class="form-group"><label>Heure</label><input type="time" id="tripTime" /></div>
+            <div class="form-group"><label>Nombre de places</label><input type="number" id="tripSeats" value="45" /></div>
+            <div class="form-group"><label>Prix (FCFA)</label><input type="number" id="tripPrice" /></div>
+            <button onclick="addTrip()">✅ Créer le trajet</button>
+        </div>
+    </div>
+    
+    <!-- Modal Confirmation -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('confirmModal')">&times;</span>
+            <h2>Confirmation</h2>
+            <p id="confirmMessage"></p>
+            <button onclick="confirmAction()" class="btn-success">Confirmer</button>
+            <button onclick="closeModal('confirmModal')" class="btn-danger">Annuler</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let currentCompany = null;
+        let currentAction = null;
+        let currentItemId = null;
+        let tripsData = [];
+        let bookingsData = [];
+        
+        // Initialisation
+        function init() {
+            loadCompanyData();
+            updateTime();
+            setInterval(updateTime, 1000);
+        }
+        
+        function loadCompanyData() {
+            // Simulation données compagnie (à remplacer par API réelle)
+            const urlParams = new URLSearchParams(window.location.search);
+            const companyParam = urlParams.get('company') || 'UTB';
+            
+            const companies = {
+                'UTB': { name: 'UTB Transport', logo: '🚌', color: '#FF7A00' },
+                'TSR': { name: 'TSR Voyages', logo: '🚍', color: '#17a2b8' },
+                'AFT': { name: 'AFT Express', logo: '🚐', color: '#28a745' },
+                'SAMA': { name: 'SAMA Transport', logo: '🚎', color: '#6f42c1' }
+            };
+            
+            currentCompany = companies[companyParam] || companies['UTB'];
+            document.getElementById('companyName').innerHTML = `${currentCompany.logo} ${currentCompany.name}`;
+            document.title = `${currentCompany.name} - Urbain Car`;
+            
+            loadMockData();
+        }
+        
+        function loadMockData() {
+            // Données simulées
+            tripsData = [
+                { id: 1, from: 'Abidjan', to: 'Bouaké', date: '2024-01-15', time: '06:00', seats: 45, booked: 12, price: 3500 },
+                { id: 2, from: 'Abidjan', to: 'Bouaké', date: '2024-01-15', time: '10:00', seats: 45, booked: 28, price: 3500 },
+                { id: 3, from: 'Abidjan', to: 'Daloa', date: '2024-01-15', time: '07:30', seats: 45, booked: 35, price: 5000 },
+                { id: 4, from: 'Abidjan', to: 'San Pedro', date: '2024-01-15', time: '14:00', seats: 45, booked: 18, price: 6000 }
+            ];
+            
+            bookingsData = [
+                { id: 'TKT-001', client: 'Jean Kouadio', from: 'Abidjan', to: 'Bouaké', seats: 'A1,A2', amount: 7000, status: 'confirmed' },
+                { id: 'TKT-002', client: 'Marie Konan', from: 'Abidjan', to: 'Daloa', seats: 'B3', amount: 5000, status: 'confirmed' },
+                { id: 'TKT-003', client: 'Paul Bamba', from: 'Abidjan', to: 'San Pedro', seats: 'C4,C5', amount: 12000, status: 'pending' }
+            ];
+            
+            updateStats();
+            renderTripsTable();
+            renderBookingsTable();
+        }
+        
+        function updateStats() {
+            const totalTrips = tripsData.length;
+            const totalBookings = bookingsData.length;
+            const totalSeats = tripsData.reduce((sum, t) => sum + t.booked, 0);
+            const totalRevenue = bookingsData.reduce((sum, b) => sum + (b.status === 'confirmed' ? b.amount : 0), 0);
+            const totalAvailable = tripsData.reduce((sum, t) => sum + t.seats, 0);
+            const occupancyRate = totalAvailable > 0 ? ((totalSeats / totalAvailable) * 100).toFixed(1) : 0;
+            
+            document.getElementById('totalTrips').innerText = totalTrips;
+            document.getElementById('totalBookings').innerText = totalBookings;
+            document.getElementById('totalSeats').innerText = totalSeats;
+            document.getElementById('totalRevenue').innerText = totalRevenue.toLocaleString() + ' FCFA';
+            document.getElementById('occupancyRate').innerText = occupancyRate + '%';
+        }
+        
+        function renderTripsTable() {
+            const tbody = document.getElementById('tripsTableBody');
+            tbody.innerHTML = tripsData.map(trip => `
+                <tr>
+                    <td>${trip.from}</td>
+                    <td>${trip.to}</td>
+                    <td>${trip.date}</td>
+                    <td>${trip.time}</td>
+                    <td>${trip.booked}/${trip.seats}</td>
+                    <td>${((trip.booked / trip.seats) * 100).toFixed(0)}%</td>
+                    <td>
+                        <button onclick="viewTripDetails(${trip.id})" style="padding: 5px 10px; margin: 2px;">📊</button>
+                        <button onclick="cancelTrip(${trip.id})" class="btn-danger" style="padding: 5px 10px; margin: 2px;">❌</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function renderBookingsTable() {
+            const tbody = document.getElementById('bookingsTableBody');
+            tbody.innerHTML = bookingsData.map(booking => `
+                <tr>
+                    <td>${booking.id}</td>
+                    <td>${booking.client}</td>
+                    <td>${booking.from} → ${booking.to}</td>
+                    <td>${booking.seats}</td>
+                    <td>${booking.amount.toLocaleString()} FCFA</td>
+                    <td><span class="badge badge-${booking.status}">${booking.status === 'confirmed' ? 'Confirmé' : 'En attente'}</span></td>
+                    <td>
+                        <button onclick="confirmBooking('${booking.id}')" style="padding: 5px 10px; margin: 2px;">✅ Valider</button>
+                        <button onclick="cancelBooking('${booking.id}')" class="btn-danger" style="padding: 5px 10px; margin: 2px;">❌ Annuler</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function showAddTripModal() {
+            document.getElementById('tripDate').valueAsDate = new Date();
+            document.getElementById('addTripModal').style.display = 'flex';
+        }
+        
+        function addTrip() {
+            const newTrip = {
+                id: tripsData.length + 1,
+                from: document.getElementById('tripFrom').value,
+                to: document.getElementById('tripTo').value,
+                date: document.getElementById('tripDate').value,
+                time: document.getElementById('tripTime').value,
+                seats: parseInt(document.getElementById('tripSeats').value),
+                booked: 0,
+                price: parseInt(document.getElementById('tripPrice').value)
+            };
+            
+            tripsData.push(newTrip);
+            updateStats();
+            renderTripsTable();
+            closeModal('addTripModal');
+            showAlert('success', '✅ Trajet ajouté avec succès !');
+        }
+        
+        function viewTripDetails(tripId) {
+            const trip = tripsData.find(t => t.id === tripId);
+            alert(`
+📋 DÉTAILS DU TRAJET
+
+🚍 Départ: ${trip.from}
+📍 Destination: ${trip.to}
+📅 Date: ${trip.date}
+⏰ Heure: ${trip.time}
+💺 Places: ${trip.booked}/${trip.seats}
+💰 CA: ${(trip.booked * trip.price).toLocaleString()} FCFA
+📊 Taux: ${((trip.booked / trip.seats) * 100).toFixed(1)}%
+            `);
+        }
+        
+        function cancelTrip(tripId) {
+            currentAction = 'cancelTrip';
+            currentItemId = tripId;
+            document.getElementById('confirmMessage').innerText = 'Annuler ce trajet ? Toutes les réservations seront supprimées.';
+            document.getElementById('confirmModal').style.display = 'flex';
+        }
+        
+        function confirmBooking(bookingId) {
+            currentAction = 'confirmBooking';
+            currentItemId = bookingId;
+            document.getElementById('confirmMessage').innerText = 'Confirmer cette réservation ?';
+            document.getElementById('confirmModal').style.display = 'flex';
+        }
+        
+        function cancelBooking(bookingId) {
+            currentAction = 'cancelBooking';
+            currentItemId = bookingId;
+            document.getElementById('confirmMessage').innerText = 'Annuler cette réservation ?';
+            document.getElementById('confirmModal').style.display = 'flex';
+        }
+        
+        function confirmAction() {
+            if (currentAction === 'cancelTrip') {
+                tripsData = tripsData.filter(t => t.id !== currentItemId);
+                updateStats();
+                renderTripsTable();
+                showAlert('success', '✅ Trajet annulé');
+            } else if (currentAction === 'confirmBooking') {
+                const booking = bookingsData.find(b => b.id === currentItemId);
+                if (booking) booking.status = 'confirmed';
+                renderBookingsTable();
+                showAlert('success', '✅ Réservation confirmée');
+            } else if (currentAction === 'cancelBooking') {
+                bookingsData = bookingsData.filter(b => b.id !== currentItemId);
+                renderBookingsTable();
+                showAlert('success', '✅ Réservation annulée');
+            }
+            closeModal('confirmModal');
+            updateStats();
+        }
+        
+        function generateReport() {
+            const startDate = document.getElementById('reportStartDate').value;
+            const endDate = document.getElementById('reportEndDate').value;
+            
+            const totalRevenue = bookingsData.reduce((sum, b) => sum + b.amount, 0);
+            const totalBookings = bookingsData.length;
+            const avgTicket = totalBookings > 0 ? totalRevenue / totalBookings : 0;
+            
+            document.getElementById('reportResult').innerHTML = `
+                <div class="alert alert-success">
+                    <h3>📊 Rapport du ${startDate || 'début'} au ${endDate || 'aujourd\'hui'}</h3>
+                    <p>💰 Chiffre d'affaires: ${totalRevenue.toLocaleString()} FCFA</p>
+                    <p>🎫 Tickets vendus: ${totalBookings}</p>
+                    <p>📈 Ticket moyen: ${avgTicket.toLocaleString()} FCFA</p>
+                    <button onclick="exportReport()">📥 Exporter CSV</button>
+                </div>
+            `;
+        }
+        
+        function exportReport() {
+            let csv = "Ticket,Client,Trajet,Sièges,Montant,Statut\n";
+            bookingsData.forEach(b => {
+                csv += `${b.id},${b.client},${b.from}→${b.to},${b.seats},${b.amount},${b.status}\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `rapport_${currentCompany.name}_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showAlert('success', '✅ Rapport exporté !');
+        }
+        
+        function showAlert(type, message) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.innerHTML = message;
+            document.body.insertBefore(alertDiv, document.body.firstChild);
+            setTimeout(() => alertDiv.remove(), 3000);
+        }
+        
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            section.classList.toggle('active');
+        }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+        
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('currentTime').innerHTML = now.toLocaleTimeString('fr-CI');
+        }
+        
+        function logout() {
+            window.location.href = 'index.html';
+        }
+        
+        // Fermer modal en cliquant en dehors
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        }
+        
+        init();
+    </script>
+</body>
+</html>
