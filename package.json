@@ -1,0 +1,14 @@
+{
+  "name": "urbaincar-wakapass",
+  "version": "2.0.0",
+  "description": "Urbain Car - Solution digitale de transport en Côte d'Ivoire",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "compression": "^1.7.4"
+  }
+}
