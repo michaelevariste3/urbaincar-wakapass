@@ -2,16 +2,20 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#FF7A00">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="https://via.placeholder.com/192x192/FF7A00/white?text=UC">
     <title>Urbain Car - WakaPass</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0B1F3A; color: white; padding: 15px; }
         h1 { color: #FF7A00; text-align: center; margin-bottom: 15px; font-size: 1.5rem; }
-        .card { background: #1E2F4B; padding: 15px; border-radius: 12px; margin-bottom: 15px; }
+        .card { background: #1E2F4B; padding: 15px; border-radius: 12px; margin-bottom: 15px; animation: fadeIn 0.3s ease; }
         input, select, button { width: 100%; padding: 12px; margin-bottom: 10px; border: none; border-radius: 8px; font-size: 14px; }
         input, select { background: #2A3F5F; color: white; }
-        button { background: #FF7A00; color: #0B1F3A; font-weight: bold; cursor: pointer; }
+        button { background: #FF7A00; color: #0B1F3A; font-weight: bold; cursor: pointer; transition: transform 0.1s; }
+        button:active { transform: scale(0.98); }
         .btn-danger { background: #dc3545; color: white; }
         .btn-success { background: #20C997; color: white; }
         .btn-secondary { background: #6c757d; color: white; }
@@ -29,22 +33,23 @@
         .trip-card { background: #2A3F5F; padding: 12px; border-radius: 8px; margin-bottom: 10px; cursor: pointer; }
         .trip-card:hover { background: #FF7A00; }
         .price { font-size: 1.2rem; font-weight: bold; color: #FF7A00; }
-        .notification { position: fixed; top: 10px; right: 10px; background: #20C997; padding: 12px; border-radius: 8px; z-index: 1000; max-width: 280px; animation: slideIn 0.3s ease; }
+        .notification { position: fixed; top: 10px; right: 10px; background: #20C997; padding: 12px; border-radius: 8px; z-index: 1000; max-width: 280px; animation: slideIn 0.3s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        .install-btn { background: #20C997; color: white; margin-top: 10px; }
         @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .loader { text-align: center; padding: 40px; }
         .error { background: #dc3545; padding: 10px; border-radius: 8px; margin: 10px 0; text-align: center; }
         .success { background: #20C997; padding: 10px; border-radius: 8px; margin: 10px 0; text-align: center; }
-        @media (max-width: 600px) { .seats-grid { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 600px) { .seats-grid { grid-template-columns: repeat(3, 1fr); } .grid-buttons { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
     <h1>🚍 URBAIN CAR / WAKAPASS</h1>
-    <div id="app"><div class="loader">⏳ Connexion à Firebase...</div></div>
+    <div id="app"><div class="loader">⏳ Chargement...</div></div>
 
     <script type="module">
-        // IMPORTANT : Version avec modules ES6 pour meilleure connexion
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, query, where, getDocs, doc, updateDoc, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, where, getDocs, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         const firebaseConfig = {
@@ -56,17 +61,34 @@
             appId: "1:382162245065:web:8f039bc018f2ff9cfec418"
         };
 
-        // Initialisation
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
 
         let currentUser = null;
         let currentTrip = null;
+        let deferredPrompt = null;
 
         const prices = {
             "Abidjan-Bouaké": 3500, "Abidjan-Daloa": 5000, "Abidjan-San Pedro": 6000,
             "Abidjan-Korhogo": 7500, "Bouaké-Abidjan": 3500, "Daloa-Abidjan": 5000
+        };
+
+        // PWA Installation
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const installDiv = document.createElement('div');
+            installDiv.className = 'card';
+            installDiv.innerHTML = '<button class="install-btn" onclick="installApp()">📱 INSTALLER L\'APPLICATION</button>';
+            document.getElementById('app').appendChild(installDiv);
+        });
+
+        window.installApp = () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
+            }
         };
 
         function showNotification(msg) {
@@ -94,16 +116,12 @@
             }
 
             currentUser = user;
-            
-            // Vérifier le rôle
             let role = "agent";
             try {
                 const q = query(collection(db, "users"), where("email", "==", user.email));
-                const querySnapshot = await getDocs(q);
-                if (!querySnapshot.empty) {
-                    querySnapshot.forEach(doc => { role = doc.data().role || "agent"; });
-                }
-            } catch(e) { console.log("Erreur rôle:", e); }
+                const snapshot = await getDocs(q);
+                if (!snapshot.empty) snapshot.forEach(doc => { role = doc.data().role || "agent"; });
+            } catch(e) { console.log(e); }
 
             document.getElementById("app").innerHTML = `
                 <div class="card" style="text-align:center">
@@ -122,7 +140,7 @@
             `;
         }
 
-        // MODULE TICKETS
+        // MODULE TICKETS (même code que précédemment)
         window.showTripSearch = () => {
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
@@ -152,30 +170,22 @@
             const to = document.getElementById("toCity").value;
             const company = document.getElementById("company").value;
             const date = document.getElementById("travelDate").value;
-
-            const routeKey = `${from}-${to}`;
-            const price = prices[routeKey] || 4500;
+            const price = prices[`${from}-${to}`] || 4500;
             const hours = ["06:00", "08:30", "11:00", "13:30", "16:00", "18:30"];
             
             let html = `<h3>🚍 Trajets disponibles</h3>`;
             hours.forEach((hour, idx) => {
                 const places = 45 - Math.floor(Math.random() * 20);
-                html += `
-                    <div class="trip-card" onclick="window.selectSeats('${idx}','${company}','${from}','${to}','${hour}',${price},'${date}')">
-                        <div style="display:flex; justify-content:space-between">
-                            <div><strong>${company}</strong><br>${hour}</div>
-                            <div class="price">${price.toLocaleString()} FCFA</div>
-                        </div>
-                        <div>🎫 ${places} places</div>
-                    </div>
-                `;
+                html += `<div class="trip-card" onclick="window.selectSeats('${idx}','${company}','${from}','${to}','${hour}',${price},'${date}')">
+                    <div style="display:flex; justify-content:space-between"><div><strong>${company}</strong><br>${hour}</div><div class="price">${price.toLocaleString()} FCFA</div></div>
+                    <div>🎫 ${places} places</div>
+                </div>`;
             });
             document.getElementById("tripsResult").innerHTML = html;
         };
 
         window.selectSeats = (id, company, from, to, hour, price, date) => {
             currentTrip = { id, company, from, to, hour, price, date };
-            
             let seatsHtml = '<div class="seats-grid">';
             for (let row = 1; row <= 8; row++) {
                 for (let col of ['A', 'B', 'C', 'D']) {
@@ -186,14 +196,7 @@
             }
             seatsHtml += '</div><button class="btn-success" onclick="window.confirmBooking()">✅ CONFIRMER</button><div id="selectedSeatsInfo"></div>';
             
-            document.getElementById("content").innerHTML = `
-                <div class="card">
-                    <h3>🎫 SÉLECTIONNEZ SIÈGES</h3>
-                    <p><strong>${company}</strong> | ${from} → ${to} | ${hour}</p>
-                    ${seatsHtml}
-                    <button onclick="window.showTripSearch()" class="btn-secondary">← Retour</button>
-                </div>
-            `;
+            document.getElementById("content").innerHTML = `<div class="card"><h3>🎫 SÉLECTIONNEZ SIÈGES</h3><p><strong>${company}</strong> | ${from} → ${to} | ${hour}</p>${seatsHtml}<button onclick="window.showTripSearch()" class="btn-secondary">← Retour</button></div>`;
         };
 
         window.toggleSeat = (element) => {
@@ -209,17 +212,7 @@
             const seats = Array.from(selected).map(s => s.innerText);
             const total = currentTrip.price * seats.length;
             
-            document.getElementById("content").innerHTML = `
-                <div class="card">
-                    <h3>💰 PAIEMENT</h3>
-                    <p>${currentTrip.company} | ${currentTrip.from}→${currentTrip.to}</p>
-                    <p>🎫 ${seats.join(', ')}</p>
-                    <p class="price">💰 ${total.toLocaleString()} FCFA</p>
-                    <select id="payment"><option>📱 Orange Money</option><option>📱 MTN Money</option></select>
-                    <input type="tel" id="phone" placeholder="Numéro" />
-                    <button onclick="window.processPayment('${seats.join(',')}',${total})" class="btn-success">💳 PAYER</button>
-                </div>
-            `;
+            document.getElementById("content").innerHTML = `<div class="card"><h3>💰 PAIEMENT</h3><p>${currentTrip.company} | ${currentTrip.from}→${currentTrip.to}</p><p>🎫 ${seats.join(', ')}</p><p class="price">💰 ${total.toLocaleString()} FCFA</p><select id="payment"><option>📱 Orange Money</option><option>📱 MTN Money</option><option>🌊 Wave</option></select><input type="tel" id="phone" placeholder="Numéro (ex: 0701010101)" /><button onclick="window.processPayment('${seats.join(',')}',${total})" class="btn-success">💳 PAYER</button></div>`;
         };
 
         window.processPayment = async (seats, total) => {
@@ -238,14 +231,7 @@
                         heure: currentTrip.hour, date: currentTrip.date, siege: seats, prix: total,
                         moyenPaiement: method, telephone: phone, statut: "Confirmé", dateReservation: new Date()
                     });
-                    document.getElementById("content").innerHTML = `
-                        <div class="card success">
-                            <h3>✅ PAIEMENT RÉUSSI !</h3>
-                            <p><strong>Ticket: ${ticketId}</strong></p>
-                            <button onclick="window.printTicket('${ticketId}')" class="btn-success">🖨️ IMPRIMER</button>
-                            <button onclick="window.showMyTickets()" class="btn-primary">📋 MES TICKETS</button>
-                        </div>
-                    `;
+                    document.getElementById("content").innerHTML = `<div class="card success"><h3>✅ PAIEMENT RÉUSSI !</h3><p><strong>Ticket: ${ticketId}</strong></p><button onclick="window.printTicket('${ticketId}')" class="btn-success">🖨️ IMPRIMER</button><button onclick="window.showMyTickets()" class="btn-primary">📋 MES TICKETS</button></div>`;
                     showNotification(`🎫 Ticket ${ticketId} confirmé !`);
                 } catch(e) { alert("Erreur: " + e.message); }
             }, 1500);
@@ -257,17 +243,7 @@
             snapshot.forEach(doc => {
                 const t = doc.data();
                 const win = window.open();
-                win.document.write(`
-                    <html><body style="font-family:Arial;padding:20px;text-align:center">
-                        <h1 style="color:#FF7A00">URBAIN CAR</h1>
-                        <div style="border:2px solid #FF7A00;padding:20px">
-                            <p><strong>🎫 ${t.id}</strong></p>
-                            <p>${t.compagnie} | ${t.depart}→${t.arrivee}</p>
-                            <p>📅 ${t.date} ${t.heure} | 🎫 ${t.siege}</p>
-                            <p>💰 ${t.prix.toLocaleString()} FCFA</p>
-                        </div>
-                    </body></html>
-                `);
+                win.document.write(`<html><body style="font-family:Arial;padding:20px;text-align:center"><h1 style="color:#FF7A00">URBAIN CAR / WAKAPASS</h1><div style="border:2px solid #FF7A00;padding:20px;border-radius:10px"><p><strong>🎫 ${t.id}</strong></p><p>${t.compagnie} | ${t.depart} → ${t.arrivee}</p><p>📅 ${t.date} à ${t.heure}</p><p>🎫 Sièges: ${t.siege}</p><p>💰 ${t.prix.toLocaleString()} FCFA</p><p>📱 ${t.moyenPaiement} - ${t.telephone}</p><hr><p style="font-size:12px">Présentez ce ticket au chargeur</p></div></body></html>`);
                 win.print();
             });
         };
@@ -275,10 +251,7 @@
         window.showMyTickets = async () => {
             const q = query(collection(db, "tickets"), where("userId", "==", currentUser.uid));
             const snapshot = await getDocs(q);
-            if (snapshot.empty) {
-                document.getElementById("content").innerHTML = `<div class="card">📭 Aucun ticket</div>`;
-                return;
-            }
+            if (snapshot.empty) { document.getElementById("content").innerHTML = `<div class="card">📭 Aucun ticket</div>`; return; }
             let html = `<div class="card"><h3>🎫 MES TICKETS</h3>`;
             snapshot.forEach(doc => {
                 const t = doc.data();
@@ -290,99 +263,55 @@
 
         // MODULE COLIS
         window.showForm = () => {
-            document.getElementById("content").innerHTML = `
-                <div class="card">
-                    <h3>➕ EXPÉDIER UN COLIS</h3>
-                    <input type="text" id="exp" placeholder="Expéditeur" />
-                    <input type="tel" id="telExp" placeholder="Tél expéditeur" />
-                    <input type="text" id="dest" placeholder="Destinataire" />
-                    <input type="tel" id="telDest" placeholder="Tél destinataire" />
-                    <input type="text" id="type" placeholder="Type" />
-                    <input type="text" id="desc" placeholder="Description" />
-                    <select id="from"><option>Abidjan</option><option>Bouaké</option></select>
-                    <select id="to"><option>Bouaké</option><option>Abidjan</option></select>
-                    <input type="number" id="price" placeholder="Frais" />
-                    <input type="text" id="plate" placeholder="Plaque" />
-                    <button class="btn-success" onclick="window.saveColis()">✅ ENREGISTRER</button>
-                </div>
-            `;
+            document.getElementById("content").innerHTML = `<div class="card"><h3>➕ EXPÉDIER UN COLIS</h3><input type="text" id="exp" placeholder="Expéditeur" /><input type="tel" id="telExp" placeholder="Tél expéditeur" /><input type="text" id="dest" placeholder="Destinataire" /><input type="tel" id="telDest" placeholder="Tél destinataire" /><input type="text" id="type" placeholder="Type" /><input type="text" id="desc" placeholder="Description" /><select id="from"><option>Abidjan</option><option>Bouaké</option></select><select id="to"><option>Bouaké</option><option>Abidjan</option></select><input type="number" id="price" placeholder="Frais" /><input type="text" id="plate" placeholder="Plaque" /><button class="btn-success" onclick="window.saveColis()">✅ ENREGISTRER</button></div>`;
         };
 
         window.saveColis = async () => {
             const id = "WKPS-" + Date.now();
             try {
-                await addDoc(collection(db, "parcels"), {
-                    id: id, expediteur: { nom: document.getElementById("exp").value, tel: document.getElementById("telExp").value },
-                    destinataire: { nom: document.getElementById("dest").value, tel: document.getElementById("telDest").value },
-                    details: { type: document.getElementById("type").value, description: document.getElementById("desc").value },
-                    depart: document.getElementById("from").value, arrivee: document.getElementById("to").value,
-                    frais: parseInt(document.getElementById("price").value) || 0, vehicule: document.getElementById("plate").value,
-                    statut: "En attente", date: new Date()
-                });
+                await addDoc(collection(db, "parcels"), { id, expediteur: { nom: document.getElementById("exp").value, tel: document.getElementById("telExp").value }, destinataire: { nom: document.getElementById("dest").value, tel: document.getElementById("telDest").value }, details: { type: document.getElementById("type").value, description: document.getElementById("desc").value }, depart: document.getElementById("from").value, arrivee: document.getElementById("to").value, frais: parseInt(document.getElementById("price").value) || 0, vehicule: document.getElementById("plate").value, statut: "En attente", date: new Date() });
                 alert(`✅ Colis ${id} enregistré !`);
                 showNotification(`📦 Colis ${id} expédié`);
             } catch(e) { alert("Erreur: " + e.message); }
         };
 
         window.showSearch = () => {
-            document.getElementById("content").innerHTML = `
-                <div class="card">
-                    <h3>🔍 SUIVI COLIS</h3>
-                    <input type="text" id="searchCode" placeholder="Numéro colis" />
-                    <button onclick="window.searchColis()">RECHERCHER</button>
-                    <div id="result"></div>
-                </div>
-            `;
+            document.getElementById("content").innerHTML = `<div class="card"><h3>🔍 SUIVI COLIS</h3><input type="text" id="searchCode" placeholder="Numéro colis" /><button onclick="window.searchColis()">RECHERCHER</button><div id="result"></div></div>`;
         };
 
         window.searchColis = async () => {
             const code = document.getElementById("searchCode").value;
             const q = query(collection(db, "parcels"), where("id", "==", code));
             const snapshot = await getDocs(q);
-            if (snapshot.empty) {
-                document.getElementById("result").innerHTML = `<div class="error">❌ Non trouvé</div>`;
-                return;
-            }
+            if (snapshot.empty) { document.getElementById("result").innerHTML = `<div class="error">❌ Non trouvé</div>`; return; }
             snapshot.forEach(doc => {
                 const d = doc.data();
-                document.getElementById("result").innerHTML = `
-                    <div class="card"><div class="status status-attente">📌 ${d.statut}</div>
-                    <p>📤 ${d.expediteur.nom} (${d.expediteur.tel})<br>📥 ${d.destinataire.nom}<br>📍 ${d.depart}→${d.arrivee}<br>💰 ${d.frais.toLocaleString()} FCFA</p></div>
-                `;
+                document.getElementById("result").innerHTML = `<div class="card"><div class="status status-attente">📌 ${d.statut}</div><p>📤 ${d.expediteur.nom} (${d.expediteur.tel})<br>📥 ${d.destinataire.nom}<br>📍 ${d.depart}→${d.arrivee}<br>💰 ${d.frais.toLocaleString()} FCFA</p></div>`;
             });
         };
 
         window.showAdmin = async () => {
             const q = query(collection(db, "tickets"), orderBy("dateReservation", "desc"), limit(50));
             const snapshot = await getDocs(q);
-            document.getElementById("content").innerHTML = `
-                <div class="card">
-                    <h2>👑 SUPER ADMIN</h2>
-                    <div style="background:#FF7A00;padding:15px;border-radius:10px;text-align:center">
-                        <div style="font-size:2rem">${snapshot.size}</div>
-                        <div>🎫 Tickets vendus</div>
-                    </div>
-                    <div id="list"></div>
-                </div>
-            `;
+            let total = 0;
+            snapshot.forEach(doc => total += doc.data().prix);
+            document.getElementById("content").innerHTML = `<div class="card"><h2>👑 SUPER ADMIN</h2><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px"><div style="background:#FF7A00;padding:15px;border-radius:10px;text-align:center"><div style="font-size:2rem">${snapshot.size}</div><div>🎫 Tickets</div></div><div style="background:#20C997;padding:15px;border-radius:10px;text-align:center"><div style="font-size:2rem">${total.toLocaleString()} FCFA</div><div>CA Total</div></div></div><div id="list"></div></div>`;
             let html = "";
             snapshot.forEach(doc => {
                 const t = doc.data();
-                html += `<div style="padding:10px;border-bottom:1px solid #2A3F5F">🎫 ${t.id} - ${t.depart}→${t.arrivee} - ${t.prix.toLocaleString()} FCFA</div>`;
+                html += `<div style="padding:10px;border-bottom:1px solid #2A3F5F">🎫 ${t.id} - ${t.depart}→${t.arrivee} - ${t.prix.toLocaleString()} FCFA - ${t.statut}</div>`;
             });
             document.getElementById("list").innerHTML = html;
         };
 
-        // AUTHENTIFICATION
+        // AUTH
         window.login = async () => {
             const email = document.getElementById("email").value;
             const pwd = document.getElementById("password").value;
             try {
                 await signInWithEmailAndPassword(auth, email, pwd);
                 render();
-            } catch(e) {
-                document.getElementById("message").innerHTML = `<div class="error">❌ ${e.message}</div>`;
-            }
+            } catch(e) { document.getElementById("message").innerHTML = `<div class="error">❌ ${e.message}</div>`; }
         };
 
         window.register = async () => {
@@ -390,11 +319,9 @@
             const pwd = document.getElementById("password").value;
             try {
                 const userCred = await createUserWithEmailAndPassword(auth, email, pwd);
-                await addDoc(collection(db, "users"), { email: email, role: "agent", uid: userCred.user.uid });
+                await addDoc(collection(db, "users"), { email, role: "agent", uid: userCred.user.uid });
                 document.getElementById("message").innerHTML = `<div class="success">✅ Compte créé ! Connectez-vous.</div>`;
-            } catch(e) {
-                document.getElementById("message").innerHTML = `<div class="error">❌ ${e.message}</div>`;
-            }
+            } catch(e) { document.getElementById("message").innerHTML = `<div class="error">❌ ${e.message}</div>`; }
         };
 
         window.logout = async () => {
@@ -402,8 +329,12 @@
             render();
         };
 
-        // DÉMARRAGE
         onAuthStateChanged(auth, () => render());
+
+        // Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js');
+        }
     </script>
 </body>
 </html>

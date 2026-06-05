@@ -1,0 +1,21 @@
+{
+  "name": "Urbain Car - WakaPass",
+  "short_name": "Urbain Car",
+  "description": "Solution digitale de transport en Côte d'Ivoire",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#FF7A00",
+  "background_color": "#0B1F3A",
+  "icons": [
+    {
+      "src": "https://via.placeholder.com/192x192/FF7A00/white?text=UC",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://via.placeholder.com/512x512/FF7A00/white?text=UC",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
